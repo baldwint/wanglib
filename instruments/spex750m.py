@@ -109,7 +109,6 @@ class spex750m(object):
         """
         cmd = "G0,%d\r" % (wl_value * 4000)
         self.bus.write(cmd)
-        self.wavelength = wl_value # update internal wl tally
 
     busyCodes = {"q": True,
                  "z": False }
@@ -127,14 +126,11 @@ class spex750m(object):
         resp = self.bus.read() # read one byte
         if resp != 'o':
             raise InstrumentError("750M move failed: %s" % resp)
-        else:   # update internal wl tally
-            self.wavelength += distance_to_move
 
     def get_wavelength(self):
         """Query the current wavelength """
         resp = self.bus.ask("HO\r").rstrip()
         wl = int(resp.lstrip('o')) / 4000.0
-        self.wavelength = wl # update internal wl tally
         return wl
 
     def set_wavelength(self, wl):
@@ -143,4 +139,6 @@ class spex750m(object):
         """
         distance_to_move = wl - self.get_wavelength()
         self.rel_move(distance_to_move)
+
+    wavelength = property(get_wavelength, set_wavelength)
         
