@@ -4,7 +4,7 @@
 # tkb
 
 import visa
-import time
+from time import sleep
 
 
 class triax(object):
@@ -21,12 +21,6 @@ class triax(object):
         response = self.bus.ask("E")
         return self.busyCodes[response[1:]]
 
-    busy = property(is_busy)
-
-    def check_if_busy(self):
-        if self.busy:
-            raise Exception('Triax motors are busy')
-
     def get_wavelength(self):
         """query the current wavelength"""
         response = self.bus.ask("Z62,1")
@@ -34,13 +28,16 @@ class triax(object):
 
     def set_wavelength(self,wavelength):
         """move to a new wavelength"""
-        self.check_if_busy()
         command = "Z61,1,"+str(wavelength)
         response = self.bus.ask(command)
         # even though this is a write-only command,
         # triax still returns 'o' for okay
+        while self.is_busy():
+            # wait for the motors to rest
+            sleep(0.050)
 
     wavelength = property(get_wavelength,set_wavelength)
+    wl = wavelength
 
 
 if __name__ == "__main__":
@@ -52,7 +49,7 @@ if __name__ == "__main__":
         spec.wavelength = spec.wavelength + 1
         while spec.busy:
             print spec.wavelength
-            time.sleep(0.1)
+            sleep(0.1)
         print "made it to %.4f" % spec.wavelength    
     print "all done!"
     print spec.wavelength

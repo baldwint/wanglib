@@ -29,18 +29,16 @@ class spex750m(object):
         result = measure_something()
         print beast.get_wavelength(), result
 
-
     """
-
     
     def __init__(self, calibration, addr=0):
 
-        self.bus_timeout = 10
-        self.bus = Serial(addr, timeout=self.bus_timeout, baudrate=19200)
+        self.bus = Serial(addr, timeout=10, baudrate=19200)
 
         try:
             self.init_hardware()    # try to initialize hardware.
-        except InstrumentError:
+        except InstrumentError as err:
+            print "%s, rebooting once..." % err
             self.reboot()           # in case of trouble, reboot
             self.init_hardware()    # and try again.
 
@@ -52,8 +50,8 @@ class spex750m(object):
     def boot_status_check(self):
         """Check the boot status of the controller.
         * : Just Autobauded
-        F : Just Flashed
         B : Boot Acknowledged
+        F : Just Flashed
         """
         self.bus.flush()
         resp = self.bus.ask(' ')
@@ -65,8 +63,7 @@ class spex750m(object):
             raise InstrumentError("Unknown 750M boot status: %s" % resp)
 
     def reboot(self):
-        """Reboot the controller if it's not responding
-        """
+        """Reboot the controller if it's not responding"""
         return self.bus.ask("\xDE")
 
     def hi_iq(self):
@@ -94,21 +91,37 @@ class spex750m(object):
         """
         status = self.boot_status_check()
         if status == "*":
-            self.hi_iq()
-            self.flash()
+            self.hi_iq()    # * -> B
+            self.flash()    # B -> F
         status = self.boot_status_check()
         if status == "F":
             return True
         else:
             raise InstrumentError("750M hardware init failed.")
 
+    def wait_for_ok(self):
+        """sometimes the controller will wait a bit
+        following a command before issuing a status byte.
+        'o' means ok. This method waits for this byte
+        indefinitely.
+        """
+        while self.bus.inWaiting() == 0: 
+            # as long as the buffer is empty, hang out
+            sleep(0.050)
+        # read the status byte when it arrives
+        resp = self.bus.read() 
+        if resp != 'o':
+            raise InstrumentError("750M operation failed: %s" % resp)
+
     def calibrate(self, wl_value):
         """Read the current wavelength from the window
         and pass it to this method (units of nm) to recalibrate
         the 750M.
         """
+        self.bus.flush()
         cmd = "G0,%d\r" % (wl_value * 4000)
         self.bus.write(cmd)
+        self.wait_for_ok()
 
     busyCodes = {"q": True,
                  "z": False }
@@ -121,15 +134,19 @@ class spex750m(object):
     def rel_move(self, distance_to_move):
         """Move the grating by the given
         number of nanometers."""
+        self.bus.flush()
         cmd = "F0,%d\r" % (distance_to_move * 4000)
         self.bus.write(cmd)
-        resp = self.bus.read() # read one byte
-        if resp != 'o':
-            raise InstrumentError("750M move failed: %s" % resp)
+        self.wait_for_ok()
+        while self.is_busy():
+            # wait for the motors to rest 
+            sleep(0.050)
 
     def get_wavelength(self):
         """Query the current wavelength """
-        resp = self.bus.ask("HO\r").rstrip()
+        self.bus.flush()
+        self.bus.write("HO\r")
+        resp = self.bus.read(9).rstrip()
         wl = int(resp.lstrip('o')) / 4000.0
         return wl
 
@@ -141,4 +158,5 @@ class spex750m(object):
         self.rel_move(distance_to_move)
 
     wavelength = property(get_wavelength, set_wavelength)
+    wl = wavelength
         

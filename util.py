@@ -10,7 +10,7 @@ class Serial(serial.Serial):
     def readall(self):
         return self.read(self.inWaiting())
 
-    def ask(self, query, lag=0.1):
+    def ask(self, query, lag=0.05):
         self.write(query)
         sleep(lag)
         return self.readall()
