@@ -14,3 +14,10 @@ class Serial(serial.Serial):
         self.write(query)
         sleep(lag)
         return self.readall()
+
+class InstrumentError(Exception):
+    """Exception raised when talking to instruments
+    results in fail.
+    """
+    pass
+

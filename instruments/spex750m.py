@@ -1,5 +1,5 @@
 from time import sleep
-from wanglib.util import Serial
+from wanglib.util import *
 
 
 class spex750m(object):
@@ -36,9 +36,14 @@ class spex750m(object):
     def __init__(self, calibration, addr=0):
 
         self.bus_timeout = 10
-        
         self.bus = Serial(addr, timeout=self.bus_timeout, baudrate=19200)
-        self.init_hardware()
+
+        try:
+            self.init_hardware()    # try to initialize hardware.
+        except InstrumentError:
+            self.reboot()           # in case of trouble, reboot
+            self.init_hardware()    # and try again.
+
         self.calibrate(calibration)
 
     def __repr__(self):
@@ -53,11 +58,11 @@ class spex750m(object):
         self.bus.flush()
         resp = self.bus.ask(' ')
         if len(resp) == 0:
-            raise Exception("750M did not give a boot status")
+            raise InstrumentError("750M did not give a boot status")
         elif resp[0] in ("*", "F", "B"):
             return resp[0]
         else:
-            raise Exception("Unknown 750M boot status: %s" % resp)
+            raise InstrumentError("Unknown 750M boot status: %s" % resp)
 
     def reboot(self):
         """Reboot the controller if it's not responding
@@ -75,7 +80,7 @@ class spex750m(object):
         if resp[0] == "=":
             return True
         else:
-            raise Exception("750M HI IQ command failed")
+            raise InstrumentError("750M HI IQ command failed")
 
     def flash(self):
         """Flash the controller by sending the O2000<null>
@@ -95,7 +100,7 @@ class spex750m(object):
         if status == "F":
             return True
         else:
-            raise Exception("750M hardware init failed.")
+            raise InstrumentError("750M hardware init failed.")
 
     def calibrate(self, wl_value):
         """Read the current wavelength from the window
@@ -121,7 +126,7 @@ class spex750m(object):
         self.bus.write(cmd)
         resp = self.bus.read() # read one byte
         if resp != 'o':
-            raise Exception("750M move failed: %s" % resp)
+            raise InstrumentError("750M move failed: %s" % resp)
         else:   # update internal wl tally
             self.wavelength += distance_to_move
 
