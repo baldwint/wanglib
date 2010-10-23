@@ -4,6 +4,7 @@
 # tkb
 
 import visa
+from wanglib.util import InstrumentError
 
 class lockin(object):
     # boilerplate to define the interface
@@ -16,7 +17,7 @@ class egg5110(object):
         self.bus = visa.instrument(addr)
         
         if self.bus.ask("ID") != '5110':     # verify lockin identity
-            raise Exception('5110 lockin not detected at address %d' % addr)
+            raise InstrumentError('5110 lockin not detected at address %d' % addr)
 
     # sensitivity functions
     
@@ -68,7 +69,7 @@ class egg5110(object):
 
     def getTimeconst(self):
         val = self.bus.ask("TC")
-        return timeconsts[int(val)]
+        return self.timeconsts[int(val)]
     def setTimeconst(self,code):
         self.bus.write("TC %d" % code)
     timeconst = property(getTimeconst,setTimeconst)
@@ -103,7 +104,7 @@ class egg5110(object):
     def getADC(self,n):
         # read one of the four ADC ports
         if n not in range(1,4):
-            raise Exception("Indicate ADC between 1 and 4")
+            raise InstrumentError("Indicate ADC between 1 and 4")
         response = self.bus.ask("ADC %d" % n)
         return 0.001 * response, 'V'
 
