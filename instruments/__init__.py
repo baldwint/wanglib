@@ -7,3 +7,4 @@
 from spex750m import spex750m
 from triax import triax
 from egg5110 import egg5110
+from agilent_signal_generators import ag8648
