@@ -108,6 +108,16 @@ class egg5110(object):
         response = self.bus.ask("ADC %d" % n)
         return 0.001 * response, 'V'
 
+    @property
+    def lights(self):
+        response = self.bus.ask("LTS")
+        return bool(int(response))
+
+    @lights.setter
+    def lights(self, arg):
+        cmd = "LTS %d" % bool(arg)
+        self.bus.write(cmd)
+
 
     
 

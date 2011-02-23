@@ -3,22 +3,34 @@
 #
 # tkb
 
-import visa
+from visa import instrument, VisaIOError
 from time import sleep
 
 
 class triax(object):
     def __init__(self,addr='GPIB::1'):
-        self.bus = visa.instrument(addr)
+        self.bus = instrument(addr)
+        self.bus.timeout = 20
+        self.freeze_counter = 0
+        self.freeze_tol = 2
         # extension: verify that the instrument
         # is at the given address
 
     busyCodes = {"q": True,
+                 "": True,
                  "z": False }
+
+    check_interval = 0.050
 
     def is_busy(self):
         """ ask the Triax if its motors are busy """
-        response = self.bus.ask("E")
+        try:
+            response = self.bus.ask("E")
+        except VisaIOError:
+            print "VISA operation timed out"
+            return True
+        if response[0] != 'o':
+            print "triax in trouble! %s" % response
         return self.busyCodes[response[1:]]
 
     def get_wavelength(self):
@@ -32,9 +44,14 @@ class triax(object):
         response = self.bus.ask(command)
         # even though this is a write-only command,
         # triax still returns 'o' for okay
+        sleep(self.check_interval)
         while self.is_busy():
             # wait for the motors to rest
-            sleep(0.050)
+            sleep(self.check_interval)
+            self.freeze_counter += self.check_interval
+            if self.freeze_counter >= self.freeze_tol:
+                raise Exception("triax still frozen after %.2f sec")
+        self.freeze_counter = 0
 
     wavelength = property(get_wavelength,set_wavelength)
     wl = wavelength

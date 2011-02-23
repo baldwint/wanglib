@@ -1,32 +1,8 @@
-"""This file provides useful utilities for the wanglib package."""
+"""miscellaneous experimental routines """
 
-import serial
 from time import sleep
 
-class Serial(serial.Serial):
-    """ Extension of the standard serial class.  """
-    
-    def readall(self):
-        """Automatically read all the bytes from the serial port."""
-        return self.read(self.inWaiting())
-
-    def ask(self, query, lag=0.05):
-        """
-        Write to the bus, then read response.
-
-        This doesn't seem to work very well.
-
-        """
-        self.write(query)
-        sleep(lag)
-        return self.readall()
-
-class InstrumentError(Exception):
-    """Raise this when talking to instruments fails."""
-    pass
-
-
-def scan_gen(wls, spec, lockin, avgs=1):
+def scan_gen(wls, spec, lockin, avgs=1, wait_factor=1.75):
     """
     Generator for a scanned spectrum.
 
@@ -39,6 +15,8 @@ def scan_gen(wls, spec, lockin, avgs=1):
     Keyword Arguments:
         avgs -- the number of data points to average on 
                 each spectral value.
+        wait_factor --  how many multiples of the lockin's
+                        time constant to wait after each move
 
     """
 #    if lockin is None:
@@ -57,7 +35,7 @@ def scan_gen(wls, spec, lockin, avgs=1):
         spec.wl = wls[i]
         tally = 0.
         for j in range(avgs):
-            sleep(timeconst * 1.2)
+            sleep(timeconst * wait_factor)
             tally += lockin.r[0] # discard unit
         yield tally / avgs
 

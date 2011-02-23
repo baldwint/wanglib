@@ -5,6 +5,7 @@
 # tkb
 
 import visa
+from time import sleep
 
 class ag8648(object):
     """
@@ -58,6 +59,41 @@ class ag8648(object):
         """
         cmd = "POW:AMPL %.1f %s" % (val,unit)
         self.bus.write(cmd)
+
+    @property
+    def freq(self):
+        """ Return the RF frequency in MHz.  """
+        resp  = self.bus.ask("FREQ:CW?")
+        return float(resp) / 10**6
+
+    @freq.setter
+    def freq(self, val, unit="MHZ"):
+        """
+        Set the RF frequency in MHz.
+
+        """
+        # maximum resolution:  10 Hz.
+        fmt_vals = {
+            "MHZ": "%.5f",
+            "KHZ": "%.2f",
+        }
+        val = fmt_vals[unit] % val
+        cmd = "FREQ:CW %s %s" % (val,unit)
+        self.bus.write(cmd)
+
+    def blink(self, interval = 1.):
+        return_state = self.on
+        while True:
+            try:
+                self.on = True
+                sleep(interval / 2.)
+                self.on = False
+                sleep(interval / 2.)
+            except KeyboardInterrupt:
+                self.on = return_state
+                break
+
+
 
 
 
