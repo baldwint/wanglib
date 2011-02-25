@@ -5,7 +5,7 @@
 # tkb
 
 from spex750m import spex750m
-from egg5110 import egg5110
+from lockins import egg5110
 
 # Some instruments depend on PyVISA, which in turn
 # relies on the NI VISA stack. This is unavailable
@@ -18,4 +18,4 @@ except ImportError:
 else:
     # these instruments depend on PyVisa.
     from triax import triax
-    from agilent_signal_generators import ag8648
+    from signal_generators import ag8648
