@@ -4,7 +4,7 @@
 #
 # tkb
 
-import visa
+from visa import instrument
 from time import sleep
 
 class ag8648(object):
@@ -28,7 +28,7 @@ class ag8648(object):
     """
 
     def __init__(self, addr='GPIB::18'):
-        self.bus = visa.instrument(addr)
+        self.bus = instrument(addr)
 
     @property
     def on(self):

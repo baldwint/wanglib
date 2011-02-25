@@ -1,5 +1,5 @@
 from time import sleep
-from wanglib.util import *
+from wanglib.util import Serial, InstrumentError
 
 
 class spex750m(object):

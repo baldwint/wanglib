@@ -3,6 +3,53 @@
 import serial
 from time import sleep
 
+class InstrumentError(Exception):
+    """Raise this when talking to instruments fails."""
+    pass
+
+try:
+    import visa as visa_mod
+except ImportError:
+    visa_avail = False
+else:
+    visa_avail = True
+
+try:
+    import Gpib as Gpib_mod
+except ImportError:
+    gpib_avail = False
+else:
+    gpib_avail = True
+
+if gpib_avail:
+    class Gpib(Gpib_mod.Gpib):
+        """ Extension of the linux-gpib Gpib module. """
+
+        def read(self, *args, **kwargs):
+            """ Read from Gpib device, stripping trailing space. """
+            result = super(Gpib, self).read(*args, **kwargs)
+            return result.rstrip()
+
+        def ask(self, query):
+            """
+            Write then read.
+
+            Shadows the usual Gpib.ask() method,
+            which does something weird.
+
+            """
+            self.write(query)
+            return self.read()
+
+        
+elif visa_avail:
+    def Gpib(board, addr):
+        return visa_mod.instrument("GPIB%d::%d" % (board, addr))
+else:
+    raise InstrumentError("no GPIB interface found")
+
+
+
 class Serial(serial.Serial):
     """ Extension of the standard serial class.  """
     
@@ -20,10 +67,6 @@ class Serial(serial.Serial):
         self.write(query)
         sleep(lag)
         return self.readall()
-
-class InstrumentError(Exception):
-    """Raise this when talking to instruments fails."""
-    pass
 
 
 def scan_gen(wls, spec, lockin, avgs=1):

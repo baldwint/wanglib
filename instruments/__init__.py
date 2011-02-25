@@ -5,6 +5,7 @@
 # tkb
 
 from spex750m import spex750m
+from egg5110 import egg5110
 
 # Some instruments depend on PyVISA, which in turn
 # relies on the NI VISA stack. This is unavailable
@@ -13,8 +14,8 @@ from spex750m import spex750m
 try:
     import visa
 except ImportError:
-    print "No VISA bindings found. GPIB unavailable."
+    pass
 else:
+    # these instruments depend on PyVisa.
     from triax import triax
-    from egg5110 import egg5110
     from agilent_signal_generators import ag8648

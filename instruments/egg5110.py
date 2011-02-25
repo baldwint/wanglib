@@ -3,21 +3,27 @@
 #
 # tkb
 
-import visa
-from wanglib.util import InstrumentError
-
-class lockin(object):
-    # boilerplate to define the interface
-    # good idea or not?
-    pass
-
+from wanglib.util import InstrumentError, Gpib
 
 class egg5110(object):
-    def __init__(self,addr='GPIB::12'):
-        self.bus = visa.instrument(addr)
-        
-        if self.bus.ask("ID") != '5110':     # verify lockin identity
-            raise InstrumentError('5110 lockin not detected at address %d' % addr)
+    """ An EG&G model 5110 lock-in.
+
+    Typically controlled over GPIB, address 12. If you're connecting
+    differently, bass the bus object to the constructor.
+
+    """
+    def __init__(self,bus=None):
+
+        if bus is not None:
+            self.bus = bus
+        else:
+            self.bus = Gpib(0, 12)
+
+
+        # verify lockin identity
+        self.bus.write("ID")
+        if self.bus.read() != '5110':    
+            raise InstrumentError('5110 lockin not found')
 
     # sensitivity functions
     
