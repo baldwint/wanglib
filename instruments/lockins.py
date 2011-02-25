@@ -1,9 +1,38 @@
-# This is a library to talk to the EG&G Model 5110 lock-in
-# which runs on address 12 of the GPIB network
-#
-# tkb
+"""
+This module contains a class definition for each of
+several lock-in amplifiers present in the lab.
+
+"""
 
 from wanglib.util import InstrumentError, Gpib
+
+class srs830(object):
+    """ A Stanford Research Systems model SR830 DSP lock-in.
+
+    Typically controlled over GPIB, address 8.
+
+    If you're connecting differently,
+    pass the bus object to the constructor.
+
+    """
+
+    def __init__(self,bus=None):
+        if bus is not None:
+            self.bus = bus
+        else:
+            self.bus = Gpib(0, 8)
+
+    ADC_cmd = "OAUX?%d"
+    ADC_range = (1, 2, 3, 4)
+
+    def getADC(self,n):
+        """ read one of the ADC ports. Return value in volts."""
+        if n not in self.ADC_range:
+            err = "Indicate ADC in range %s" % (self.ADC_range) 
+            raise InstrumentError(err)
+        response = self.bus.ask(self.ADC_cmd % n)
+        return float(response)
+
 
 class egg5110(object):
     """ An EG&G model 5110 lock-in.
@@ -13,12 +42,10 @@ class egg5110(object):
 
     """
     def __init__(self,bus=None):
-
         if bus is not None:
             self.bus = bus
         else:
             self.bus = Gpib(0, 12)
-
 
         # verify lockin identity
         self.bus.write("ID")

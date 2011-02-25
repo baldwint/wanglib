@@ -5,7 +5,7 @@
 # tkb
 
 from spex750m import spex750m
-from lockins import egg5110
+from lockins import egg5110, srs830
 
 # Some instruments depend on PyVISA, which in turn
 # relies on the NI VISA stack. This is unavailable
