@@ -9,13 +9,20 @@ class spex750m(object):
 
     spex750m(800)
 
-    where 800 is measured in nm. This assumes the instrument is
-    plugged into the first serial port. To use a different serial port,
+    where 800 is measured in nm. 
+
+    To specify the serial port where the spex is plugged in,
     just pass it as the optional second parameter. For example, the
     following should be equivalent:
 
     spex750m(800,addr=1)
-    spex750m(800,addr="COM2")
+    spex750m(800,addr="COM2")   # on windows
+    spex750m(800,addr="/dev/ttyS1")   # on linux
+
+    By default, this class is configured to look for the spex
+    plugged into the first port on the USB-serial adapter, like:
+
+    spex750m(800,addr="/dev/ttyUSB0")
 
     Control the 750M using the provided methods. This example performs
     a wavelength scan:
@@ -31,8 +38,10 @@ class spex750m(object):
 
     """
     
-    def __init__(self, calibration, addr=0):
+    def __init__(self, calibration, addr=None):
 
+        if addr is None:
+            addr = '/dev/ttyUSB0'   # default location
         self.bus = Serial(addr, timeout=10, baudrate=19200)
 
         try:
