@@ -6,6 +6,7 @@
 
 from spex750m import spex750m
 from lockins import egg5110, srs830
+from stages import ESP300_stage
 
 # Some instruments depend on PyVISA, which in turn
 # relies on the NI VISA stack. This is unavailable
