@@ -8,7 +8,7 @@ for use as a programmable grating, pulse shaper, etc.
 
 """
 
-from numpy import *
+import numpy
 import Image
 import StringIO
 
@@ -18,7 +18,7 @@ def sinewave(arg):
     argument given in 2pi units
 
     """
-    return 0.5 * (1 - sin(2 * pi * arg))
+    return 0.5 * (1 - numpy.sin(2 * numpy.pi * arg))
 
 def sawtooth(arg):
     """
@@ -26,7 +26,7 @@ def sawtooth(arg):
     argument given in 2pi units
 
     """
-    return remainder(arg,1.0)
+    return numpy.remainder(arg,1.0)
 
 def zebra(arg):
     """
@@ -34,7 +34,7 @@ def zebra(arg):
     argument given in 2pi units
 
     """
-    return around(remainder(arg,1.0))
+    return numpy.around(numpy.remainder(arg,1.0))
 
 options = { 
     # a registry of grating function types
@@ -71,16 +71,16 @@ class grating:
     
         # first find the unshifted argument
         if not self.variableSpacing:
-            findarg = true_divide.outer
+            findarg = numpy.true_divide.outer
         else:
-            findarg = true_divide
+            findarg = numpy.true_divide
         arg = findarg(coordinate,self.spacing)
 
         # add in the shift
         if not self.variablePhase:
-            addshift = add.outer
+            addshift = numpy.add.outer
         else:
-            addshift = add
+            addshift = numpy.add
         arg = addshift(arg,phase)
         
         # evaluate the function
@@ -148,7 +148,7 @@ class pattern(object):
         something intelligent.
 
         """
-        return random.random(self.dim)
+        return numpy.random.random(self.dim)
 
     @property
     def image(self):
@@ -156,7 +156,7 @@ class pattern(object):
         A PIL representation of the pattern in grayscale mode
 
         """
-        grarray = int8(maprange(self.array_, self.grayrange))
+        grarray = numpy.int8(maprange(self.array_, self.grayrange))
         return Image.fromarray(grarray, 'L')
 
     @property
@@ -221,16 +221,16 @@ class deflector(pattern):
     @property
     def th(self):
         """ orientation of the grating, in radians """
-        return radians(self.deg)
+        return numpy.radians(self.deg)
     @th.setter
     def th(self,th):
-        self.deg = degrees(th)
+        self.deg = numpy.degrees(th)
 
     @property
     def grid(self):
-        x, y = arange(self.dim[1]), arange(self.dim[0])
-        xax, yax = meshgrid(x, y)
-        return xax*sin(self.th) + yax*cos(self.th)
+        x, y = numpy.arange(self.dim[1]), numpy.arange(self.dim[0])
+        xax, yax = numpy.meshgrid(x, y)
+        return xax*numpy.sin(self.th) + yax*numpy.cos(self.th)
 
     @property
     def array_(self):
@@ -260,9 +260,9 @@ class pulseshaper(pattern):
 
     # x and y axes of the pulse shaper, pixel units.
     @property
-    def x(self): return arange(self.dim[0])
+    def x(self): return numpy.arange(self.dim[0])
     @property
-    def y(self): return arange(self.dim[1])
+    def y(self): return numpy.arange(self.dim[1])
 
     @property
     def array_(self):
@@ -275,6 +275,9 @@ from pylab import imshow
 def show(*args, **kwargs):
     """
     imshow alternative that makes slm-specific tweaks.
+
+    That is, it makes gray colormaps the default
+    and turns off the axis labels.
 
     """
     if 'cmap' not in kwargs:
