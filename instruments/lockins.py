@@ -109,20 +109,39 @@ class egg5110(object):
 
     # measurement functions
 
-    def measure(self,command):
+    def measure(self, command, unit=None):
+        """
+        Measure one of the usual signals (X, Y, or MAG).
+        
+        Results are given as a fraction of full-scale
+        (that is, sensitivity). To change this behavior,
+        use the 'unit' keyword argument.
+
+        >>> li.measure('X', unit=True)
+
+        This will return a 2-tuple containing the measurement
+        and the unit string ("V", "mV", etc.),
+
+        """
+        response = self.bus.ask(command)
         # the 5110 lockin returns measurements
         # as ten-thousandths of full-scale
-        sens,unit = self.sensitivity
-        multiplier = float(sens) / 10000
-        response = self.bus.ask(command)
-        return int(response) * multiplier, unit
+        fraction = int(response) / 10000.
+        if unit is None:
+            return fraction 
+        else:
+            sens,unit = self.sensitivity
+            return fraction * sens, unit
 
-    def getX(self): return self.measure('X')
-    x = property(getX)
-    def getY(self): return self.measure('Y')
-    y = property(getY)
-    def getMagnitude(self): return self.measure('MAG')
-    r = property(getMagnitude)
+    @property
+    def x(self):
+        return self.measure('X')
+    @property
+    def y(self):
+        return self.measure('Y')
+    @property
+    def r(self):
+        return self.measure('MAG')
 
     def getPhase(self):
         # phase measurements come in millidegrees
