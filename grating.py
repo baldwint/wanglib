@@ -11,6 +11,9 @@ for use as a programmable grating, pulse shaper, etc.
 import numpy
 import Image
 import StringIO
+import xmlrpclib
+from wanglib.util import InstrumentError
+from time import sleep
 
 def sinewave(arg):
     """
@@ -120,23 +123,68 @@ class pattern(object):
 
     Parameters for the pattern should be attributes.
     
-    Provided by the boilerplate:
+    Standard attributes:
         image -- a PIL representation of the array, in grayscale.
         png -- the PNG file representation of the image.
         encodeimage -- a method that basically saves the PIL
                         image encoded as a file (default PNG)
-                        in memory. This was used for the XML-RPC
-                        thing once upon a time.
+                        in memory.
+
+    Display-server compatibility:
+        setproxy -- set the server proxy to display
+                    these images at
+        senddata -- send the current image data to the 
+                    display server
 
     """
-    def __init__(self, dim=(1024,768)):
+    def __init__(self, dim=(1890,1020), server=None):
         """
-        Set core parameters of the pattern,
-        like the dimension, etc.
+        Set core parameters of the pattern.
+
+        Keyword arguments:
+            dim -- a 2-tuple representing the pixel dimension
+                    of the pattern. Default is (1890, 1020)
+                    (about the largest that can be displayed on
+                    a 1920x1080 monitor, with menu bars etc (on XFCE)
+            server -- a string containing the address of the 
+                    display server where the pattern will
+                    be displayed. Default: None.
 
         """
         self.dim = dim
-        self.grayrange = (0,255)
+        self._grayrange = (0,255)
+        self.setproxy(server)
+
+    def update(self):
+        """call this whenever an attribute is changed. """
+        if self.proxy is not None:
+            self.senddata()
+
+    @property
+    def grayrange(self):
+        return self._grayrange
+    @grayrange.setter
+    def grayrange(self, val):
+        self._grayrange = val
+        self.update()
+
+    def setproxy(self, server_address):
+        """
+        Construct XML-RPC server proxy from a string containing
+        the server address.
+
+        >>> eg = pattern()
+        >>> eg.proxy
+        None
+        >>> pattern.setproxy("http://localhost:8000")
+        >>> eg.proxy
+        <ServerProxy for localhost:8000>
+        
+        """
+        if server_address is not None:
+            self.proxy = xmlrpclib.ServerProxy(str(server_address))
+        else:
+            self.proxy = None
 
     @property
     def array_(self):
@@ -159,19 +207,6 @@ class pattern(object):
         grarray = numpy.int8(maprange(self.array_, self.grayrange))
         return Image.fromarray(grarray, 'L')
 
-    @property
-    def rgb(self):
-        """
-        A PIL representation of the pattern in RGB mode
-
-        Useful for imshow() when you don't want it using colormaps.
-        seems buggy? just use image, and then cmap='gray'.
-
-        """
-        img = self.image
-        img.mode = 'RGB'
-        return img
-
     def encodeimage(self, form='PNG'):
         """
         return a file-like image of the specified format
@@ -186,6 +221,19 @@ class pattern(object):
     # now properties shortcut to formats
     png = property(encodeimage)
 
+    def senddata(self, throw=True):
+        """
+        Send image data to the display server.
+
+        If throw = False is given, will fail silently
+        if there is no display server.
+
+        """
+        if self.proxy is not None:
+            data = xmlrpclib.Binary(self.png.read())
+            self.proxy.setImageData(data)
+        elif throw:
+            raise InstrumentError("No display server defined")
 
 class deflector(pattern):
     """
@@ -203,10 +251,8 @@ class deflector(pattern):
         phase -- phase of the grating
 
     """
-    def __init__(self,
-                dim = (1000,1900),
-                ):
-        super(deflector,self).__init__(dim)
+    def __init__(self, *args, **kwargs):
+        super(deflector,self).__init__(*args, **kwargs)
 
         # grating parameters:
         self.kind = 'Sawtooth'
@@ -247,16 +293,40 @@ class pulseshaper(pattern):
     Vertically-deflecting grating with
     horizontally-varied phase and amplitude profiles
 
+    Adjust the pixel dimension of the pulse shaper
+    by providing a 2-tuple to the constructor like:
+
+    >>> ps = pulseshaper(dim = (1920, 1080))
+
+    This returns an object representing your shaper.
+
+    Reference Attributes:
+        x -- horizontal axis (pixel units)
+        y -- vertical axis (pixel units)
+
+    Parameter Attributes:
+        phase -- array representing phase of grating (2pi units)
+        amp -- array representing amplitude modulation
+        grating -- a grating object, has its own attributes.
+
     """
-    def __init__(self, dim = (1024, 768)):
-        super(pulseshaper,self).__init__(dim)
+    def __init__(self, *args, **kwargs):
+
+        if 'server' not in kwargs.keys():
+            # configure a server by default
+            kwargs['server'] = 'http://localhost:8000'
+
+        super(pulseshaper,self).__init__(*args, **kwargs)
 
         # grating function to use, default spacing 100 pixels
         self.grating = grating(100)
 
         # defaults: no amplitude or phase mod
-        self.phase = self.x * 0.0
-        self.amp = self.phase + 1.0
+        self._phase = self.x * 0.0
+        self._amp = self.phase + 1.0
+
+        # always call this
+        self.update()
 
     # x and y axes of the pulse shaper, pixel units.
     @property
@@ -264,12 +334,41 @@ class pulseshaper(pattern):
     @property
     def y(self): return numpy.arange(self.dim[1])
 
+    # these are a bunch of settable attributes
+    @property
+    def phase(self):
+        return self._phase
+    @phase.setter
+    def phase(self, val):
+        self._phase = val
+        self.update()
+    @property
+    def amp(self):
+        return self._amp
+    @amp.setter
+    def amp(self, val):
+        self._amp = val
+        self.update()
+
     @property
     def array_(self):
         # this works due to some crazy fucked up shit I wrote
         # in 2010 defining the "grating" class above
         # i must have been smoking crack
-        return self.grating(self.y, self.phase) * self.amp
+        return self.grating(- self.y, self.phase) * self.amp
+
+    def blink(self, interval = 1.0):
+        """ blink the grating on and off (for alignment)"""
+        orig = self.amp
+        while True:
+            try:
+                self.amp = 0
+                sleep(interval / 2.)
+                self.amp = orig
+                sleep(interval / 2.)
+            except KeyboardInterrupt:
+                self.amp = orig
+                break
 
 from pylab import imshow
 def show(*args, **kwargs):
