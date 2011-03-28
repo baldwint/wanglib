@@ -1,11 +1,42 @@
+#!/usr/bin/env python
+
+"""
+Client routines for use with the CCD-2000 camera.
+(generally attached to the Spex 750M spectrometer).
+
+To configure the CCD server, refer to README file
+on the desktop of the CCD controller computer.
+
+"""
+
 import socket as s
 import numpy as n
 from time import sleep
 
+class labview_client(object):
+    """
+    TCP client for Tim's labview ccd server.
 
-class ccd_client(object):
+    Instantiate like so:
 
-    def __init__(self, host = "128.223.131.31", port = 3663, center_wl = 700):
+    >>> ccd = labview_client(700)
+
+    where 700 is the current wavelength of the spectrometer
+    (read from the window).
+
+    This info is needed because the labview program calculates
+    wavelength values (from dispersion calibration info) on the
+    server-side. Tye Hetherington wrote that sub-routine.
+
+    To adjust the center wavelength later (e.g. after you move the
+    spectrometer), set center_wl attribute:
+
+    >>> ccd.center_wl = 750
+
+    To get a spectrum, use the get_spectrum method.
+
+    """
+    def __init__(self, center_wl, host = "128.223.131.31", port = 3663):
         self.sock = s.socket(s.AF_INET,s.SOCK_STREAM)
         self.sock.connect((host,port))
         self.center_wl = center_wl
@@ -40,12 +71,14 @@ class ccd_client(object):
         #self.sock.close()
 
 if __name__ == "__main__":
+    # for command line invocation, take the center wavelength
+    # as first argument and put on a live display.
     import pylab as p
+    from sys import argv
     p.ion()
     p.hold(False)
     while True:
-        clnt = ccd_client()
-        clnt.center_wl = 600
+        clnt = labview_client(argv[1])
         wl,ccd = clnt.get_spectrum()
         line, = p.plot(wl,ccd.sum(axis=0))
         p.draw()
