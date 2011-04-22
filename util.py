@@ -2,6 +2,7 @@
 
 import serial
 from time import sleep
+from numpy import array
 
 class InstrumentError(Exception):
     """Raise this when talking to instruments fails."""
@@ -43,8 +44,11 @@ if gpib_avail:
 
         
 elif visa_avail:
-    def Gpib(board, addr):
-        return visa_mod.instrument("GPIB%d::%d" % (board, addr))
+    def Gpib(board, addr, timeout=None):
+        inst = visa_mod.instrument("GPIB%d::%d" % (board, addr))
+        if timeout is not None:
+            inst.timeout = timeout
+        return inst
 else:
     raise InstrumentError("no GPIB interface found")
 
@@ -104,4 +108,120 @@ def scan_gen(wls, spec, lockin, avgs=1):
             tally += lockin.r[0] # discard unit
         yield tally / avgs
 
+def num(string):
+    """
+    convert string to number. decide whether to convert to int or float.
+    """
+    if '.' not in string:
+        return int(string)
+    else:
+        return float(string)
+
+
+from scipy.optimize import leastsq
+import csv
+
+class calibration(dict):
+    """
+    a class encapsulating a linear mapping based on measurements.
+
+    Stores calibration pairs, calculates fits to determine cal
+    parameters, and provides a function to do it.
+
+    """
+    def __init__(self, *args, **kw):
+        # initial guess of the cal
+        self.param = [1,0]
+        # form of the fit function
+        self.func = lambda p, x: p[0] * x + p[1]
+        dict.__init__(self, *args, **kw)
+
+    def keys(self):
+        return array(dict.keys(self))
+
+    def values(self):
+        return array(dict.values(self))
+
+    def recal(self):
+        """perform the fit routine and return parameters"""
+        diff = lambda p, x, y: y - self.func(p, x)
+        args = (self.keys(), self.values())
+        
+        result, win = leastsq(diff, self.param, args)
+        if win:
+            self.param = result
+        else:
+            print "fail!!"
+
+    def plot(self):
+        """ plot the calibration points and the fit"""
+        from pylab import plot
+        from numpy import linspace
+        plot(self.keys(), self.values(), 'o')
+        x = linspace(min(self.keys()), max(self.keys()), 100)
+        plot(self.keys(), self.values(), 'o')
+        plot(x, self.__call__(x), 'k--')
+
+
+    def __call__(self, arg):
+        """ calculate a conversion based on the current fit parameters """
+        return self.func(self.param, arg)
+
+    def save(self, filename):
+        """ 
+        save the current calibration data to csv file. pass filename as arg.
+
+        >>> cal.save('18oct.csv')
+
+        """
+        fl = open(filename, 'w')
+        wrt = csv.writer(fl)
+        for x, y in self.iteritems():
+            wrt.writerow([x, y])
+
+    def load(self, filename):
+        """
+        load a csv calibration.
+
+        >>> cal.load('18oct.csv')
+
+        """
+        rd = csv.reader(open(filename, 'r'))
+        for x, y in rd:
+            self[num(x)] = num(y)
+        self.recal()
+
+def fit(x, y, func, guess):
+    """
+    fit data to a given functional form using least squares.
+
+    inputs:
+        x, y: data to fit, in arrays.
+        func: a function of p and x, where p is a parameter vector
+        guess: inital value of p to try.
+
+    outputs:
+        pfit: the best-fit parameter set.
+
+    """
+    diff = lambda p, x, y: y - func(p, x)
+    pfit, win = leastsq(diff, guess, (x, y))
+    if win:
+        return pfit
+    else:
+        print "fail!"
+
+
+
+
+if __name__ == "__main__":
+    from pylab import *
+    cal = calibration()
+    x = arange(40, 100, 5)
+    y = .2 * x + 5
+    y += randn(len(y))
+    param = [.2,5]
+    for i in range(len(x)):
+            cal[x[i]] = y[i]
+    cal.plot()
 

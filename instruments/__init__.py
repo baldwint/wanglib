@@ -4,9 +4,13 @@
 #
 # tkb
 
-from spex750m import spex750m
+from spex750m import spex750m, triax320
 from lockins import egg5110, srs830
 from stages import ESP300_stage
+
+# this is the old triax code, designed for GPIB
+# communication. don't use it, it sucks.
+# from triax import triax
 
 # Some instruments depend on PyVISA, which in turn
 # relies on the NI VISA stack. This is unavailable
@@ -18,5 +22,4 @@ except ImportError:
     pass
 else:
     # these instruments depend on PyVisa.
-    from triax import triax
     from signal_generators import ag8648

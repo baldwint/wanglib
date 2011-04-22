@@ -1,16 +1,29 @@
-# a library to talk to the Triax spectrometer
-# which runs on address 1 of the GPIB network
-#
-# tkb
+"""
+a library to talk to the Triax spectrometer
+which runs on address 1 of the GPIB network
 
-from visa import instrument, VisaIOError
+"""
+
+#from visa import instrument, VisaIOError
+#from visa import VisaIOError
+from wanglib.util import Gpib, InstrumentError
 from time import sleep
 
 
 class triax(object):
-    def __init__(self,addr='GPIB::1'):
-        self.bus = instrument(addr)
-        self.bus.timeout = 20
+    """
+    A Jobin-Yvon "triax" spectrometer.
+
+    Typically controlled over GPIB, address 1. Alternately,
+    pass a bus object to the constructor.
+
+    """
+    def __init__(self, bus=None):
+        if bus is not None:
+            self.bus = bus
+        else:
+            self.bus = Gpib(0, 1)
+#        self.bus.timeout = 20
         self.freeze_counter = 0
         self.freeze_tol = 2
         # extension: verify that the instrument
@@ -24,21 +37,23 @@ class triax(object):
 
     def is_busy(self):
         """ ask the Triax if its motors are busy """
-        try:
-            response = self.bus.ask("E")
-        except VisaIOError:
-            print "VISA operation timed out"
-            return True
+#        try:
+#            response = self.bus.ask("E")
+#        except VisaIOError:
+#            print "VISA operation timed out"
+#            return True
+        response = self.bus.ask("E")
         if response[0] != 'o':
             print "triax in trouble! %s" % response
         return self.busyCodes[response[1:]]
 
-    def get_wavelength(self):
+    @property
+    def wavelength(self):
         """query the current wavelength"""
         response = self.bus.ask("Z62,1")
         return float(response[1:])
-
-    def set_wavelength(self,wavelength):
+    @wavelength.setter
+    def wavelength(self,wavelength):
         """move to a new wavelength"""
         command = "Z61,1,"+str(wavelength)
         response = self.bus.ask(command)
@@ -50,11 +65,32 @@ class triax(object):
             sleep(self.check_interval)
             self.freeze_counter += self.check_interval
             if self.freeze_counter >= self.freeze_tol:
-                raise Exception("triax still frozen after %.2f sec")
+                raise InstrumentError("triax still frozen after %.2f sec")
         self.freeze_counter = 0
 
-    wavelength = property(get_wavelength,set_wavelength)
+    # shortcut for lazy typists
     wl = wavelength
+
+    def initialize(self):
+        """
+        Perform the power-up routine.
+
+        This should take two minutes.
+
+        """
+        self.bus.write("A")
+        print "init started, waiting 2 minutes"
+        sleep(120)
+#        # set entrance slits
+#        self.bus.write("i0,0,0\r")
+#        sleep(0.5)
+#        # set exit slits to zero
+#        self.bus.write("i0,0,0\r")
+#        sleep(0.5)
+        # get status
+        resp = self.bus.read()
+        return resp
+
 
 
 if __name__ == "__main__":

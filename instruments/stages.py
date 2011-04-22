@@ -5,7 +5,8 @@ Interfaces to motion controllers
 
 """
 
-from wanglib.util import Gpib
+from wanglib.util import Gpib, num
+from time import sleep
 
 class ESP300_stage(object):
     """
@@ -39,14 +40,17 @@ class ESP300_stage(object):
     def move(self, delta):
         """ Move the stage (relative move) """
         self.bus.write(self.cmd("PR%f" % delta))
+        self.wait()
 
     @property
     def pos(self):
         """ Absolute position of the stage """
-        return self.bus.ask(self.cmd("PA?"))
+        resp = self.bus.ask(self.cmd("PA?"))
+        return num(resp)
     @pos.setter
     def pos(self, val):
         self.bus.write(self.cmd("PA%f" % val))
+        self.wait()
 
     @property
     def busy(self):
@@ -54,9 +58,27 @@ class ESP300_stage(object):
         resp = self.bus.ask(self.cmd("MD?"))
         return not bool(int(resp))
 
+    def wait(self, lag=0.5):
+        """
+        Stop the python program until motors stop moving.
+
+        optionally, specify a check interval in seconds
+        (default: 0.5)
+
+        """
+        while self.busy:
+            sleep(lag)
+
     def wait_for_motors(self, extra_time=None):
         """
         Wait for motor stop.
+
+        This wait ONLY applies to the motion controller,
+        NOT the calling program. Python will continue to
+        run along, but the motion controller will be non-
+        responsive until the motors stop.
+        
+        You probably don't even want to use this function.
 
         To wait a little extra, provide a number
         of milliseconds as the argument.
@@ -80,6 +102,7 @@ class ESP300_stage(object):
             self.bus.write(self.cmd("MT-"))
         else:
             self.bus.write(self.cmd("MT+"))
+        self.wait()
 
     def define_home(self, loc=None):
         """
@@ -101,9 +124,9 @@ class ESP300_stage(object):
         self.on = True
         #move to negative hardware limit
         self.move_to_limit(-1)
-        self.wait_for_motors(100)
+#        self.wait_for_motors(100)
         self.move(1)
-        self.wait_for_motors(100)
+#        self.wait_for_motors(100)
         self.define_home()
 
 

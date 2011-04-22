@@ -12,7 +12,7 @@ import numpy
 import Image
 import StringIO
 import xmlrpclib
-from wanglib.util import InstrumentError
+from wanglib.util import InstrumentError, calibration
 from time import sleep
 
 def sinewave(arg):
@@ -325,6 +325,10 @@ class pulseshaper(pattern):
         self._phase = self.x * 0.0
         self._amp = self.phase + 1.0
 
+        # calibration dictionary to hold pixel -> wl mapping.
+        # keys are pixel numbers, values are measured wavelengths
+        self.cal = calibration()
+
         # always call this
         self.update()
 
@@ -333,6 +337,10 @@ class pulseshaper(pattern):
     def x(self): return numpy.arange(self.dim[0])
     @property
     def y(self): return numpy.arange(self.dim[1])
+
+    # x axis, wavelength units.
+    @property
+    def wl(self): return self.cal(self.x)
 
     # these are a bunch of settable attributes
     @property
