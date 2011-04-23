@@ -4,17 +4,24 @@
 #
 # tkb
 
-from visa import instrument
+from wanglib.util import Gpib 
 from time import sleep
 
 class ag8648(object):
     """
     The Agilent 8648A/B/C/D RF signal generator.
 
-    We have one on our GPIB network at address 18.
-    This is the factory-set default.
+    By default, this will look for a signal generator on
+    the GPIB network at address 18. This is the factory default. 
 
-    >>> rf = ag8648("GPIB::18")
+    >>> rf = ag8648()
+
+    If you want to talk to a different one, you'll need to 
+    specify where it's at. For example, here's one at Gpib
+    address 19.
+
+    >>> from wanglib.util import Gpib
+    >>> rf = ag8648(Gpib(0, 19))
 
     Attributes:
 
@@ -27,8 +34,11 @@ class ag8648(object):
 
     """
 
-    def __init__(self, addr='GPIB::18'):
-        self.bus = instrument(addr)
+    def __init__(self, bus=None):
+        if bus is not None:
+            self.bus = bus
+        else:
+            self.bus = Gpib(0, 18)
 
     @property
     def on(self):
