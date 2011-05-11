@@ -300,6 +300,12 @@ class pulseshaper(pattern):
 
     This returns an object representing your shaper.
 
+    By default, this class will try to find a display server
+    on the local host, port 8000. If using a different computer
+    or port, specify in the constructor, like:
+
+    >>> ps = pulseshaper(server = 'http://128.223.131.68:8000')
+
     Reference Attributes:
         x -- horizontal axis (pixel units)
         y -- vertical axis (pixel units)
