@@ -28,8 +28,13 @@ class labview_client(object):
     wavelength values (from dispersion calibration info) on the
     server-side. Tye Hetherington wrote that sub-routine.
 
-    To adjust the center wavelength later (e.g. after you move the
-    spectrometer), set center_wl attribute:
+    This client implements no control whatsoever of the 
+    SPEX 750m spectrometer to which the CCD is attached.
+    For proper wavelength and dispersion info, you'll need to
+    keep the client informed.
+
+    Whenever you move the spectrometer, set center_wl
+    attribute to match:
 
     >>> ccd.center_wl = 750
 
