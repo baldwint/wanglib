@@ -48,8 +48,8 @@ class egg5110(object):
             self.bus = Gpib(0, 12)
 
         # verify lockin identity
-        self.bus.write("ID")
-        if self.bus.read() != '5110':    
+        resp = self.bus.ask("ID")
+        if resp != '5110':    
             raise InstrumentError('5110 lockin not found')
 
     # sensitivity functions
@@ -159,6 +159,14 @@ class egg5110(object):
             raise InstrumentError("Indicate ADC between 1 and 4")
         response = self.bus.ask("ADC %d" % n)
         return 0.001 * response, 'V'
+
+    def autophase(self):
+        """ 
+        Automatically adjust the reference phase
+        to maximize the X signal and minimize Y.
+
+        """
+        self.bus.write("AQN")
 
     @property
     def lights(self):
