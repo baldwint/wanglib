@@ -313,6 +313,7 @@ class pulseshaper(pattern):
     Parameter Attributes:
         phase -- array representing phase of grating (2pi units)
         amp -- array representing amplitude modulation
+        deflect_up -- boolean. True deflects up, False deflects down
         grating -- a grating object, has its own attributes.
 
     """
@@ -330,6 +331,9 @@ class pulseshaper(pattern):
         # defaults: no amplitude or phase mod
         self._phase = self.x * 0.0
         self._amp = self.phase + 1.0
+
+        # deflect down by default
+        self.deflect_up = False
 
         # calibration dictionary to hold pixel -> wl mapping.
         # keys are pixel numbers, values are measured wavelengths
@@ -366,10 +370,11 @@ class pulseshaper(pattern):
 
     @property
     def array_(self):
-        # this works due to some crazy fucked up shit I wrote
+        gd = -1 if self.deflect_up else 1
+        # the following works due to some crazy fucked up shit I wrote
         # in 2010 defining the "grating" class above
         # i must have been smoking crack
-        return self.grating(- self.y, self.phase) * self.amp
+        return self.grating(gd * self.y, self.phase) * self.amp
 
     def blink(self, interval = 1.0):
         """ blink the grating on and off (for alignment)"""
