@@ -9,7 +9,3 @@ from lockins import egg5110, srs830
 from stages import ESP300_stage
 from signal_generators import ag8648
 
-# this is the old triax code, designed for GPIB
-# communication. don't use it, it sucks.
-# from triax import triax
-
