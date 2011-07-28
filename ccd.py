@@ -51,7 +51,7 @@ class labview_client(object):
         self.sock.send('Q')
         self.sock.send(str(100 * self.center_wl))
 
-        sleep(1)
+#        sleep(1)
 
         datalen = int(self.sock.recv(7))
         data = ''
