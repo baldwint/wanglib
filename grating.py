@@ -231,7 +231,11 @@ class pattern(object):
         """
         if self.proxy is not None:
             data = xmlrpclib.Binary(self.png.read())
-            self.proxy.setImageData(data)
+            try:
+                self.proxy.setImageData(data)
+            except xmlrpclib.ProtocolError:
+                print 'error talking to display server, retrying once'
+                self.proxy.setImageData(data)
         elif throw:
             raise InstrumentError("No display server defined")
 
