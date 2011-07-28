@@ -5,7 +5,7 @@ This module contains utilities for controlling Jobin-Yvon
 Classes defined:
     spex750m -- implements standard Jobin-Yvon serial commands
                 for simple spectrometers like the 750M.
-    triax --    extends the spex750m class with the more
+    triax320 -- extends the spex750m class with the more
                 sophisticated commands used by the triax.
 
 """
