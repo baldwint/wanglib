@@ -217,6 +217,23 @@ class spex750m(object):
 # define a new class which inherits from spex750m
 
 class triax320(spex750m):
+    """
+    A class implementing Jobin-Yvon serial commands
+    for more advanced spectrometers like the TRIAX 320.
+
+    Instantiate as you would a spex750m. If you don't 
+    specify a serial port, this class will assume the 
+    spectrometer is attached to /dev/ttyUSB1, the second
+    port on the USB-serial converter.
+
+    Unlike the 750M, the Triax 
+        - has motorized entrance and exit slits
+        - zeroes its grating on power-up.
+
+    To perform a motor init on the triax, call moto_init.
+
+
+    """
 
     # different default location.
     # hopefully the __init__ function will pick this up.
@@ -313,6 +330,10 @@ class triax320(spex750m):
     def motor_init(self):
         """
         Move all motors to their power-up (autocal) positions.
+
+        This zeroes the wavelength grating and
+        both entrance and exit slits.
+        Don't forget to reopen the slits after calling this.
 
         """
         self.bus.write("A")
