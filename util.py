@@ -1,6 +1,5 @@
 """This file provides useful utilities for the wanglib package."""
 
-import serial
 from time import sleep
 from numpy import array
 
@@ -21,6 +20,14 @@ except ImportError:
     gpib_avail = False
 else:
     gpib_avail = True
+
+try:
+    import serial
+except ImportError:
+    ser_avail = False
+else:
+    ser_avail = True
+
 
 if gpib_avail:
     class Gpib(Gpib_mod.Gpib):
@@ -50,27 +57,29 @@ elif visa_avail:
             inst.timeout = timeout
         return inst
 else:
-    raise InstrumentError("no GPIB interface found")
+    #raise InstrumentError("no GPIB interface found")
+    pass
 
 
 
-class Serial(serial.Serial):
-    """ Extension of the standard serial class.  """
-    
-    def readall(self):
-        """Automatically read all the bytes from the serial port."""
-        return self.read(self.inWaiting())
+if ser_avail:
+    class Serial(serial.Serial):
+        """ Extension of the standard serial class.  """
+        
+        def readall(self):
+            """Automatically read all the bytes from the serial port."""
+            return self.read(self.inWaiting())
 
-    def ask(self, query, lag=0.05):
-        """
-        Write to the bus, then read response.
+        def ask(self, query, lag=0.05):
+            """
+            Write to the bus, then read response.
 
-        This doesn't seem to work very well.
+            This doesn't seem to work very well.
 
-        """
-        self.write(query)
-        sleep(lag)
-        return self.readall()
+            """
+            self.write(query)
+            sleep(lag)
+            return self.readall()
 
 
 def scan_gen(wls, spec, lockin, avgs=1):
