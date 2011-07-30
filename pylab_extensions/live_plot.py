@@ -7,9 +7,9 @@ This module implements plotting of data while it is being gathered.
 
 from pylab import *
 
-def scan(x, data_gen, *args, **kwargs):
+def plotgen(x, data_gen, *args, **kwargs):
     """
-    take X/Y data, and plot it at the same time.
+    take X/Y data from a generator, and plot it at the same time.
 
     arguments:
         x           -- the x-axis data.
@@ -46,7 +46,7 @@ def scan(x, data_gen, *args, **kwargs):
 
 if __name__ == '__main__':
 
-   from time import sleep
+    from time import sleep
  
     def silly_gen(x):
         for pt in x:
@@ -56,6 +56,6 @@ if __name__ == '__main__':
             yield rl
 
     x = arange(0,4,0.1)
-    y = scan(x, silly_gen)
+    y = plotgen(x, silly_gen)
 
  
