@@ -81,42 +81,6 @@ if ser_avail:
             sleep(lag)
             return self.readall()
 
-
-def scan_gen(wls, spec, lockin, avgs=1):
-    """
-    Generator for a scanned spectrum.
-
-    Arguments:
-        wls -- list or numpy array containing
-                the spectral values to scan over.
-        spec -- a spectrometer instance. 
-        lockin -- a lockin instance. 
-
-    Keyword Arguments:
-        avgs -- the number of data points to average on 
-                each spectral value.
-
-    """
-#    if lockin is None:
-#        lockin = egg5110()
-#    if spec is None:
-#        spec = triax()
-
-    timeconst, unit = lockin.timeconst
-    if unit == "ms":
-        timeconst /= 1000.
-    elif unit == "s":
-        pass
-    else:
-        raise Exception( "Unknown time unit: %s" % unit)
-    for i in range(len(wls)):
-        spec.wl = wls[i]
-        tally = 0.
-        for j in range(avgs):
-            sleep(timeconst * 1.2)
-            tally += lockin.r[0] # discard unit
-        yield tally / avgs
-
 def num(string):
     """
     convert string to number. decide whether to convert to int or float.
