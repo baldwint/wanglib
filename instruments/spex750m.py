@@ -324,6 +324,14 @@ class triax320(spex750m):
         lambda self, val: self.set_slit_position(2, val)
     )
 
+    @property
+    def slits(self):
+        return (self.entr_slit, self.exit_slit)
+
+    @slits.setter
+    def slits(self, newvals):
+        self.entr_slit, self.exit_slit = newvals
+
     # does the triax 320 autocalibrate?
     # whatever, here's the code for that.
 
