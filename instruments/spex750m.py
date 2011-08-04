@@ -330,7 +330,14 @@ class triax320(spex750m):
 
     @slits.setter
     def slits(self, newvals):
-        self.entr_slit, self.exit_slit = newvals
+        if hasattr(newvals, '__iter__'):
+            # if a list or a tuple is given,
+            # adjust entrance and exit slits correspondingly
+            self.entr_slit, self.exit_slit = newvals
+        else:
+            # if the given value is just one number,
+            # set both slits to that value
+            self.entr_slit, self.exit_slit = (newvals, newvals)
 
     # does the triax 320 autocalibrate?
     # whatever, here's the code for that.
