@@ -55,6 +55,8 @@ if __name__ == '__main__':
             rl += 0.1* randn()
             yield rl
 
+    ion()
+
     x = arange(0,4,0.1)
     y = plotgen(x, silly_gen)
 
