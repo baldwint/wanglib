@@ -10,8 +10,11 @@ def cll(index = -1):
     To remove a different line, specify the index.
 
     """
-    gca().lines.pop(index)
-    draw()
+    ax = gca()
+    ax.lines.pop(index) # delete the line
+    ax.relim()          # recalc limits
+    ax.autoscale_view()
+    draw()              # redraw
 
 def sll(fname, index = -1):
     """
