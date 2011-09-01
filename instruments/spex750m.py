@@ -98,7 +98,7 @@ class spex750m(object):
         B : Boot Acknowledged
         F : Just Flashed
         """
-        self.bus.flush()
+        self.bus.readall()
         resp = self.bus.ask(' ')    # send autobaud character
         if len(resp) == 0:
             raise InstrumentError("750M did not give a boot status")
@@ -117,7 +117,7 @@ class spex750m(object):
         Returns True if it's ok to flash the controller
         afterward.
         """
-        self.bus.flush()
+        self.bus.readall()
         resp = self.bus.ask("\xF7")
         if resp[0] == "=":
             return True
@@ -167,7 +167,7 @@ class spex750m(object):
         and pass it to this method (units of nm) to recalibrate
         the 750M.
         """
-        self.bus.flush()
+        self.bus.readall()
         cmd = "G0,%d\r" % (wl_value * self._steps_per_nm)
         self.bus.write(cmd)
         self.wait_for_ok()
@@ -185,7 +185,7 @@ class spex750m(object):
     def rel_move(self, distance_to_move):
         """Move the grating by the given
         number of nanometers."""
-        self.bus.flush()
+        self.bus.readall()
         cmd = "F0,%d\r" % (distance_to_move * self._steps_per_nm)
         self.bus.write(cmd)
         self.wait_for_ok()
@@ -195,7 +195,7 @@ class spex750m(object):
 
     def get_wavelength(self):
         """Query the current wavelength """
-        self.bus.flush()
+        self.bus.readall()
         self.bus.write("HO\r")
         self.wait_for_ok()
         resp = self.bus.readall()
@@ -247,7 +247,7 @@ class triax320(spex750m):
 
     def get_wavelength(self):
         """Query the current wavelength """
-        self.bus.flush()
+        self.bus.readall()
         self.bus.write("Z62,1\r")
         self.wait_for_ok(expected_bytes=8)
         resp = self.bus.readall()
@@ -255,7 +255,7 @@ class triax320(spex750m):
 
     def set_wavelength(self, wl):
         """Move to a new wavelength """
-        self.bus.flush()
+        self.bus.readall()
         self.bus.write("Z61,1,"+str(wl)+"\r")
         self.wait_for_ok()
         while self.is_busy():
@@ -277,7 +277,7 @@ class triax320(spex750m):
         >>> spec.move_slit_relative(0,5)
 
         """
-        self.bus.flush()
+        self.bus.readall()
         self.bus.write("k0,%d,%d\r" % (slit_number, amount))
         self.wait_for_ok()
         while self.is_busy():
@@ -294,7 +294,7 @@ class triax320(spex750m):
         5
 
         """
-        self.bus.flush()
+        self.bus.readall()
         self.bus.write("j0,%d\r" % slit_number)
         self.wait_for_ok()
         resp = self.bus.readall()
