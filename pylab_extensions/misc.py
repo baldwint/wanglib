@@ -2,6 +2,7 @@
 
 from pylab import gca, draw
 import numpy
+from time import sleep
 
 def cll(index = -1):
     """
@@ -16,7 +17,24 @@ def cll(index = -1):
     ax.autoscale_view()
     draw()              # redraw
 
-def sll(fname, index = -1):
+def bll(index = -1, lag = 0.3):
+    """
+    blink the last line, identifying it
+
+    """
+
+    line = gca().lines[index]
+    lw, ms = line.get_lw(), line.get_ms() # preserve original state
+    line.set_lw(lw * 2) # double the width of lines
+    line.set_ms(ms * 2) # double the size of markers
+    draw()
+    sleep(lag) 
+    line.set_lw(lw) # restore original linewithds
+    line.set_ms(ms) # and marker sizes
+    draw()
+
+
+def sll(fname, index = -1, blink = True):
     """
     Save last line.
 
@@ -29,3 +47,5 @@ def sll(fname, index = -1):
     line = gca().lines[index]
     x,y = line.get_data()
     numpy.save(fname, (x,y))
+    if blink:
+        bll(index) # blink the line to indicate a successful save
