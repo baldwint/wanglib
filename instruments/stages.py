@@ -91,18 +91,23 @@ class newport_stage_controller(object):
         while self.is_axis_busy(axis):
             sleep(lag)
 
-    def move(self, axis, delta): # copy into stage class?
-        """ Move the stage (relative move) """
+    def move_axis(self, axis, delta): 
+        """ Move a given axis (relative move) """
         self.bus.write(self.cmd(self._rel_move_cmd % delta, axis))
         self.wait(axis)
 
-    def move_to_limit(self, axis, direction=-1): # copy into stage class
+    def move_axis_to_limit(self, axis, direction=-1): 
         """
-        Move to the hardware limit of the stage.
+        Move a given axis to the hardware limit.
 
         By default, finds the negative limit.
         To find the positive limit, provide a positive
         number as the argument.
+
+        NOTE: sometimes, the ESP300 will time out and give up
+        looking for the hardware limit if it takes too long
+        to get there. So, try to get reasonably close to the limit
+        before using this function.
 
         """
         cmd = self._move_to_limit_cmd 
@@ -113,11 +118,11 @@ class newport_stage_controller(object):
         self.bus.write(self.cmd(cmd, axis))
         self.wait(axis)
 
-    def _get_axis_position(self, axis): # stay with controller
+    def get_axis_position(self, axis): 
         """ Absolute position of the stage """
         resp = self.bus.ask(self.cmd(self._get_abs_pos_cmd, axis))
         return num(resp.rstrip(' COUNTS'))
-    def _set_axis_position(self, axis, val):
+    def set_axis_position(self, axis, val):
         self.bus.write(self.cmd(self._set_abs_pos_cmd % val, axis))
         self.wait(axis)
 
@@ -133,41 +138,20 @@ class ESP300(newport_stage_controller):
     _set_abs_pos_cmd = 'PA%f'
     _rel_move_cmd =  "PR%f"
 
-    def is_axis_on(self, axis): # keep with controller class
+    def is_axis_on(self, axis):
         """ ask whether a given axis is on or off """
         resp = self.bus.ask(self.cmd("MO?", axis))
         return bool(int(resp))
 
-    def _turn_axis_on(self, axis):
+    def turn_axis_on(self, axis):
         self.bus.write(self.cmd("MO", axis))
-    def _turn_axis_off(self, axis):
+    def turn_axis_off(self, axis):
         self.bus.write(self.cmd("MF", axis))
 
     def is_axis_busy(self, axis):
         """ ask whether motion is in progress """
         resp = self.bus.ask(self.cmd("MD?", axis))
         return not bool(int(resp))
-
-    # this should really just get deleted.
-#    def wait_for_motors(self, extra_time=None):
-#        """
-#        Wait for motor stop.
-#
-#        This wait ONLY applies to the motion controller,
-#        NOT the calling program. Python will continue to
-#        run along, but the motion controller will be non-
-#        responsive until the motors stop.
-#        
-#        You probably don't even want to use this function.
-#
-#        To wait a little extra, provide a number
-#        of milliseconds as the argument.
-#        
-#        """
-#        if extra_time is not None:
-#            self.bus.write(self.cmd("WS", self.axis))
-#        else:
-#            self.bus.write(self.cmd("WS%f" % extra_time, self.axis))
 
     def define_axis_home(self, axis, loc=None):
         """
@@ -182,6 +166,68 @@ class ESP300(newport_stage_controller):
             self.bus.write(self.cmd("DH%f" % loc, axis))
         else:
             self.bus.write(self.cmd("DH0", axis))
+
+    # CALIBRATION FUNCTIONS:
+
+    def get_axis_encoder_resolution(self, axis):
+        """ Get the distance represented by one encoder pulse. """
+        resp = self.bus.ask(self.cmd("SU?", axis))
+        return float(resp)
+
+    def set_axis_encoder_resolution(self, axis, val):
+        """ adjust the encoder calibration. """
+        self.bus.write(self.cmd("SU%f" % val, axis))
+
+    def get_axis_step_size(self, axis):
+        """ Get the distance represented by one motor step. """
+        resp = self.bus.ask(self.cmd("FR?", axis))
+        return float(resp)
+
+    def set_axis_step_size(self, axis, val):
+        """ adjust the motor calibration. """
+        self.bus.write(self.cmd("FR%f" % val, axis))
+
+    def get_axis_max_velocity(self, axis):
+        """ Get the maximum motor velocity. """
+        resp = self.bus.ask(self.cmd("VU?", axis))
+        return float(resp)
+
+    def set_axis_max_velocity(self, axis, val):
+        """ Set the max motor velocity. """
+        self.bus.write(self.cmd("VU%f" % val, axis))
+
+    def get_axis_velocity(self, axis):
+        """ Get the current motor velocity. """
+        resp = self.bus.ask(self.cmd("VA?", axis))
+        return float(resp)
+
+    def set_axis_velocity(self, axis, val):
+        """ Set the motor velocity. """
+        self.bus.write(self.cmd("VA%f" % val, axis))
+
+    # UNIT LABELS:
+
+    _unit_labels = {
+        0: 'counts',
+        1: 'steps',
+        2: 'mm',
+        3: 'um',
+    }
+
+    def get_axis_unit_label(self, axis):
+        """ Get the unit label for a given axis. """
+        resp = self.bus.ask(self.cmd("SN?", axis))
+        return self._unit_labels[int(resp)]
+
+    def set_axis_unit_label(self, axis, key):
+        """
+        Set the unit label for a given axis.
+
+        Use the index in the dictionary above.
+
+        """
+        key = int(key)
+        resp = self.bus.ask(self.cmd("SN%d" % key, axis))
 
 
 class MM3000(newport_stage_controller):
@@ -255,11 +301,26 @@ class stage(object):
     # use this property to move the stage around.
     @property
     def pos(self): 
-        return self.controller._get_axis_position(self.axis)
+        return self.controller.get_axis_position(self.axis)
     @pos.setter
     def pos(self, val):
-        self.controller._set_axis_position(self.axis, val)
+        self.controller.set_axis_position(self.axis, val)
 
+    def move(self, delta): 
+        """ Move the stage (relative move) """
+        self.controller.move_axis(self.axis, delta)
+
+    def move_to_limit(self, direction=-1): 
+        """
+        Move to the hardware limit of the stage.
+
+        By default, finds the negative limit.
+        To find the positive limit, provide a positive
+        number as the argument.
+
+        """
+        self.controller.move_axis_to_limit(self.axis, direction)
+ 
     def find_zero(self): 
         """
         Place the zero 1mm from the hardware limit.
@@ -271,8 +332,8 @@ class stage(object):
         except AttributeError: # the stage controller doesn't support
             pass                # turning stages on/off
         #move to negative hardware limit
-        self.controller.move_to_limit(self.axis, -1)
-        self.controller.move(self.axis, self._one_mm)
+        self.move_to_limit(-1)
+        self.move(self._one_mm)
         self.controller.define_axis_home(self.axis)
 
     # the on/off property will only work if the controller
@@ -283,9 +344,31 @@ class stage(object):
     @on.setter
     def on(self, val):
         if val:
-            self.controller._turn_axis_on(self.axis)
+            self.controller.turn_axis_on(self.axis)
         else:
-            self.controller._turn_axis_off(self.axis)
+            self.controller.turn_axis_off(self.axis)
+
+    # these properties will only work with ESP300
+    # TODO: programmatically create properties based on
+    # matching to controller.get_axis_.* methods
+    @property
+    def step_size(self):
+        return self.controller.get_axis_step_size(self.axis)
+    @step_size.setter
+    def step_size(self, val):
+        return self.controller.set_axis_step_size(self.axis, val)
+
+    @property
+    def encoder_resolution(self):
+        return self.controller.get_axis_encoder_resolution(self.axis)
+    @encoder_resolution.setter
+    def encoder_resolution(self, val):
+        return self.controller.set_axis_encoder_resolution(self.axis, val)
+
+    @property
+    def unit(self):
+        return self.controller.get_axis_unit_label(self.axis)
+
 
 class delay_stage(object):
     """
@@ -318,9 +401,29 @@ class delay_stage(object):
     def t(self, new_val):
         pos = self.stage_length - (self.c * new_val) * 0.5
         self.pos = pos
- 
 
 # finally: the actual stages we use on the table
+
+class thorlabs_Z612B(stage):
+    """ Thorlabs Z612B motorized actuator. """
+
+    _one_mm = 1000
+
+    def initialize(self):
+        um = 3 # index for 'um' label
+        self.controller.set_axis_unit_label(self.axis, um)
+
+        # thread pitch: 0.5 mm
+        # gear reduction: 256 : 1
+        self.step_size = 500./256
+        
+        # encoder: 48 ticks/rev at motor
+        # this theoretically makes for 40mm resolution
+        self.encoder_resolution = self.step_size / 48
+
+        # max velocity 425 um/sec
+        self.controller.set_axis_max_velocity(self.axis, 425)
+        self.controller.set_axis_velocity(self.axis, 200)
 
 class long_stage(stage, delay_stage):
     _one_mm = 1 # = 1mm in stage units
