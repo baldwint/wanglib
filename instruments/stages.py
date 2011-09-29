@@ -60,6 +60,7 @@ class newport_stage(object):
     #    _get_abs_pos_cmd 
     #    _set_abs_pos_cmd
     #    _rel_move_cmd
+    # specific to the stage:
     #    _one_mm
 
     def __init__(self, axisnum, bus=None):
@@ -98,6 +99,11 @@ class newport_stage(object):
         By default, finds the negative limit.
         To find the positive limit, provide a positive
         number as the argument.
+
+        NOTE: sometimes, the ESP300 will time out and give up
+        looking for the hardware limit if it takes too long
+        to get there. So, try to get reasonably close to the limit
+        before using this function.
 
         """
         cmd = self._move_to_limit_cmd 
@@ -141,7 +147,6 @@ class ESP300_stage(newport_stage):
     _get_abs_pos_cmd = 'PA?'
     _set_abs_pos_cmd = 'PA%f'
     _rel_move_cmd =  "PR%f"
-    _one_mm = 1 # = 1mm in stage units
 
     @property
     def on(self):
@@ -166,6 +171,9 @@ class ESP300_stage(newport_stage):
         Define the origin of this stage
         to be its current position.
 
+        To define the current position to be some number
+        other than zero, provide that number in the loc kwarg.
+
         """
         if loc is not None:
             self.bus.write(self.cmd("DH%f" % loc))
@@ -174,17 +182,84 @@ class ESP300_stage(newport_stage):
 
     # CALIBRATION FUNCTIONS:
 
+    @property
+    def encoder_resolution(self):
+        """ Get the distance represented by one encoder pulse. """
+        resp = self.bus.ask(self.cmd("SU?"))
+        return float(resp)
+    @encoder_resolution.setter
+    def encoder_resolution(self, val):
+        """ adjust the encoder calibration. """
+        self.bus.write(self.cmd("SU%f" % val))
+
+    @property
+    def step_size(self):
+        """ Get the distance represented by one motor step. """
+        resp = self.bus.ask(self.cmd("FR?"))
+        return float(resp)
+    @step_size.setter
+    def step_size(self, val):
+        """ adjust the motor calibration. """
+        self.bus.write(self.cmd("FR%f" % val))
+
+    def get_max_velocity(self):
+        """ Get the maximum motor velocity. """
+        resp = self.bus.ask(self.cmd("VU?"))
+        return float(resp)
+
+    def set_max_velocity(self, val):
+        """ Set the max motor velocity. """
+        self.bus.write(self.cmd("VU%f" % val))
+
+    def get_velocity(self):
+        """ Get the current motor velocity. """
+        resp = self.bus.ask(self.cmd("VA?"))
+        return float(resp)
+
+    def set_velocity(self, val):
+        """ Set the motor velocity. """
+        self.bus.write(self.cmd("VA%f" % val))
+
     # UNIT LABELS:
+
+    _unit_labels = {
+        0: 'counts',
+        1: 'steps',
+        2: 'mm',
+        3: 'um',
+    }
+
+    @property
+    def unit(self):
+        """ Get the unit label for a given axis. """
+        resp = self.bus.ask(self.cmd("SN?"))
+        return self._unit_labels[int(resp)]
+
+    def set_unit(self, key):
+        """
+        Set the unit label for a given axis, by index.
+
+        Unit labels ('mm', 'um', etc) have corresponding
+        integer indices. Look these up in the _unit_labels
+        dictionary.
+
+        """
+        #TODO: reverse dictionary lookup would be nice
+        key = int(key)
+        resp = self.bus.ask(self.cmd("SN%d" % key))
 
 
 class MM3000_stage(newport_stage):
+    """
+    A Newport MM3000 motion controller.
+    
+    """
 
     gpib_default = 8
     _move_to_limit_cmd = 'ML'
     _get_abs_pos_cmd = 'TP'
     _set_abs_pos_cmd = 'PA%d' # MM3000 only supports integers!
     _rel_move_cmd =  "PR%d" # ditto
-    _one_mm = 1e4 # = 1mm in stage units
 
     @property
     def busy(self):
@@ -240,13 +315,36 @@ class delay_stage(newport_stage):
         self.pos = pos
  
 
-# finally: the actual stages we use
+# finally: the actual stages we use on the table
+
+class thorlabs_Z612B(ESP300_stage):
+    """ Thorlabs Z612B motorized actuator. """
+
+    _one_mm = 1000
+
+    def initialize(self):
+        um = 3 # index for 'um' label
+        self.unit = um
+
+        # thread pitch: 0.5 mm
+        # gear reduction: 256 : 1
+        self.step_size = 500./256
+        
+        # encoder: 48 ticks/rev at motor
+        # this theoretically makes for 40nm resolution
+        self.encoder_resolution = self.step_size / 48
+
+        # max velocity 425 um/sec
+        self.set_max_velocity(425)
+        self.set_velocity(200)
 
 class long_stage(ESP300_stage, delay_stage):
+    _one_mm = 1 # = 1mm in stage units
     stage_length = 600 # mm
     c = 0.3 # mm / ps
 
 class short_stage(MM3000_stage, delay_stage):
+    _one_mm = 1e4 # = 1mm in stage units
     mm = 1e4
     stage_length = 100 * mm 
     c = 0.3 * mm #/ ps

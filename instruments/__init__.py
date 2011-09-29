@@ -6,6 +6,5 @@
 
 from spex750m import spex750m, triax320
 from lockins import egg5110, srs830
-from stages import ESP300_stage
 from signal_generators import ag8648
 
