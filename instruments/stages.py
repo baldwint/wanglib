@@ -7,25 +7,38 @@ Newport motion cotroller command syntax has significant
 overlap between models, so I've written several classes
 to keep things as modular as possible.
 
-Only two of the classes defined here represent actual
+To control a stage attached to a Newport ESP300 controller,
+which is on address 9 of a GPIB network run by a prologix
+controller 'plx', you might do this:
+
+>>> from wanglib.instruments.stages import ESP300_stage
+>>> esp = instrument(plx, 9)
+>>> example_stage = ESP300_stage(1, esp)
+
+Here the 'esp' object is the prologix GPIB connection,
+but pyVISA instruments should also work. 
+
+To control another axis of the stage, just make another
+ESP300_stage instance using the same instrument object.
+
+>>> other_stage = ESP300_stage(2, esp)
+
+This creates another stage on axis 2.
+
+This class also defines handy classes specific to actual
 stages that are on the table, and you probably want those.
 For example:
 
 >>> from wanglib.instruments.stages import long_stage
 >>> from wanglib.instruments.stages import short_stage
 
-Instantiate those and then use the instance methods to set
-the position or effective delay of the stage.
+Will get two delay stages, with extra properties representing
+the delay in picoseconds, etc.
 
 """
 
 from wanglib.util import Gpib, num, InstrumentError
 from time import sleep
-
-# As currently structured, each controller may only
-# control one stage. This is due to sloppy programming
-# on my part. TODO: separate classes for stages and motion
-# controllers. 
 
 class newport_stage(object):
     """
