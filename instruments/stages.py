@@ -252,6 +252,8 @@ class ESP300_stage(newport_stage):
 class MM3000_stage(newport_stage):
     """
     A Newport MM3000 motion controller.
+
+    Firmware version: 2.2
     
     """
 
@@ -261,13 +263,44 @@ class MM3000_stage(newport_stage):
     _set_abs_pos_cmd = 'PA%d' # MM3000 only supports integers!
     _rel_move_cmd =  "PR%d" # ditto
 
+    def motor_status(self, bit=None):
+        """
+        Request the MM3000 motor status byte.
+        
+        Optionally, pick out a specific bit.
+            bit 0: True if axis is moving
+            bit 1: True if motor is *off*
+            bit 2: True if direction of move is positive
+            bit 3: True if positive travel limit is active
+            bit 4: True if negative travel limit is active
+            bit 5: True if positive side of home
+            bit 6: always True
+            bit 7: always False
+
+        """
+        sb = self.bus.ask(self.cmd("MS"))
+        if bit is None:
+            return sb
+        else:
+            # bit shift right, return last bit
+            return bool((ord(sb) >> int(bit)) % 2)
+
     @property
     def busy(self):
-        # request axis-specific status byte
-        sb = self.bus.ask(self.cmd("MS"))
         # the last bit of status byte indicates
         # whether or not it is moving
-        return bool(ord(sb) % 2)
+        return self.motor_status(0)
+
+    @property
+    def on(self):
+        return not self.motor_status(1)
+    @on.setter
+    def on(self, val):
+        if val:
+            self.bus.write(self.cmd("MO"))
+        else:
+            self.bus.write(self.cmd("MF"))
+
 
     def define_home(self):
         """
@@ -343,6 +376,11 @@ class thorlabs_Z612B(ESP300_stage):
 
 class shorty_stage(ESP300_stage, delay_stage):
     """ Newport UTM100pp.1 stage, when plugged into ESP300"""
+
+    # this stage doesn't seem to work well with the ESP300.
+    # better to use the old short_stage class
+
+    _one_mm = 1 # = 1mm in stage units
 
     def initialize(self):
         mm = 2 # index for 'mm' label
