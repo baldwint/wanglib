@@ -161,26 +161,6 @@ class ESP300_stage(newport_stage):
         resp = self.bus.ask(self.cmd("MD?"))
         return not bool(int(resp))
 
-    def wait_for_motors(self, extra_time=None):
-        """
-        Wait for motor stop.
-
-        This wait ONLY applies to the motion controller,
-        NOT the calling program. Python will continue to
-        run along, but the motion controller will be non-
-        responsive until the motors stop.
-        
-        You probably don't even want to use this function.
-
-        To wait a little extra, provide a number
-        of milliseconds as the argument.
-        
-        """
-        if extra_time is not None:
-            self.bus.write(self.cmd("WS"))
-        else:
-            self.bus.write(self.cmd("WS%f" % extra_time))
-
     def define_home(self, loc=None):
         """
         Define the origin of this stage
@@ -191,6 +171,10 @@ class ESP300_stage(newport_stage):
             self.bus.write(self.cmd("DH%f" % loc))
         else:
             self.bus.write(self.cmd("DH0"))
+
+    # CALIBRATION FUNCTIONS:
+
+    # UNIT LABELS:
 
 
 class MM3000_stage(newport_stage):
