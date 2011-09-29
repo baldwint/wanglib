@@ -317,6 +317,9 @@ class delay_stage(newport_stage):
 
 # finally: the actual stages we use on the table
 
+# TODO: make these classes independent of the
+# controller they're plugged into
+
 class thorlabs_Z612B(ESP300_stage):
     """ Thorlabs Z612B motorized actuator. """
 
@@ -337,6 +340,27 @@ class thorlabs_Z612B(ESP300_stage):
         # max velocity 425 um/sec
         self.set_max_velocity(425)
         self.set_velocity(200)
+
+class shorty_stage(ESP300_stage, delay_stage):
+    """ Newport UTM100pp.1 stage, when plugged into ESP300"""
+
+    def initialize(self):
+        mm = 2 # index for 'mm' label
+        self.set_unit(mm)
+
+        # thread pitch: 2 mm
+        # gear reduction: 10 : 1
+        # 2mm / 10 = 0.2 mm
+        self.step_size = .2
+        
+        # encoder: 2000 ticks/rev at motor
+        # 0.2 mm / 2000 = 0.1 um resolution
+        self.encoder_resolution = 0.0001 # mm
+
+        # max velocity, a glacial 2 mm/sec
+        self.set_max_velocity(2)
+        self.set_velocity(1.5) # faster?
+
 
 class long_stage(ESP300_stage, delay_stage):
     _one_mm = 1 # = 1mm in stage units
