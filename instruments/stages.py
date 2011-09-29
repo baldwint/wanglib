@@ -324,7 +324,7 @@ class thorlabs_Z612B(ESP300_stage):
 
     def initialize(self):
         um = 3 # index for 'um' label
-        self.unit = um
+        self.set_unit(um)
 
         # thread pitch: 0.5 mm
         # gear reduction: 256 : 1
