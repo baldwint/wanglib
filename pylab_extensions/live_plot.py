@@ -37,7 +37,7 @@ def plotgen(x, data_gen, *args, **kwargs):
         y[i] = pt  # update our y array
         i+=1
 
-        line.set_ydata(y)       # update plot with new data
+        line.set_data(x[:i], y[:i])     # update plot with new data
         line._invalid = True    # this clears the cache or something
         gca().relim()           # recalculate the limits
         gca().autoscale_view()  # autoscale the bounds to include it all 
@@ -51,7 +51,7 @@ if __name__ == '__main__':
     def silly_gen(x):
         for pt in x:
             sleep(0.1)
-            rl = sin(2 * pi * pt)
+            rl = sin(2 * pi * pt) + 6
             rl += 0.1* randn()
             yield rl
 
