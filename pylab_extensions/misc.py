@@ -46,6 +46,21 @@ def sll(fname, index = -1, blink = True):
     """
     line = gca().lines[index]
     x,y = line.get_data()
-    numpy.save(fname, (x,y))
-    if blink:
-        bll(index) # blink the line to indicate a successful save
+
+    if not fname.endswith('.npy'):
+        # append file extension.
+        fname = fname + '.npy'
+        # usually the numpy function does this, but
+        # to guard against overwrites, we should do it ourselves.
+
+    try:
+        # test to see if the file exists
+        open(fname, 'r')
+    except IOError:
+        # if an error was raised, the filename is available
+        numpy.save(fname, (x,y))
+        if blink:
+            bll(index) # blink the line to indicate a successful save
+    else:
+        # if the open statement succeeded, the filename is taken.
+        raise ValueError('file exists. choose a different name')
