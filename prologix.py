@@ -14,7 +14,7 @@ class prologix_USB(object):
         self.lf.write('\nplx initialized at %.2f\n\n' % self.start)
 
         # create a serial port object
-        self.bus = Serial(port, baudrate=115200, rtscts=1)
+        self.bus = Serial(port, baudrate=115200, rtscts=1, log='plx.log')
         # if this doesn't work, try settin rtscts=0
 
         # flush whatever is hanging out in the buffer

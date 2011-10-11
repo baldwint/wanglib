@@ -1,6 +1,6 @@
 """This file provides useful utilities for the wanglib package."""
 
-from time import sleep
+from time import sleep, time
 from numpy import array
 
 class InstrumentError(Exception):
@@ -64,7 +64,46 @@ else:
 
 if ser_avail:
     class Serial(serial.Serial):
-        """ Extension of the standard serial class.  """
+        """
+        Extension of the standard serial class.
+        
+        to log whatever's written or read, pass a filename into
+        the 'log' kwarg.
+
+
+        """
+
+        def __init__(self, *args, **kwargs):
+            # take 'log' kwarg.
+            self.logfile = kwargs.pop('log', False)
+            if self.logfile:
+                self.start_logging(self.logfile)
+            # hand off to standard serial init function
+            super(Serial, self).__init__(*args, **kwargs)
+
+        def start_logging(self, fname):
+            """
+            start logging in/out data.
+
+            """
+            self.lf = open(fname, 'a')
+            self.start = time()
+            self.lf.write('\nstart logging at %.2f\n\n' % self.start)
+
+        def clock(self):
+            return time() - self.start
+
+        def write(self, data):
+            super(Serial, self).write(data)
+            if self.logfile:
+                self.lf.write('%.2f write: %s\n' % (self.clock(), data))
+
+        def read(self, size=1):
+            resp = super(Serial, self).read(size)
+            if self.logfile:
+                self.lf.write('%.2f read: ' % self.clock())
+                self.lf.write(resp)
+            return resp
         
         def readall(self):
             """Automatically read all the bytes from the serial port."""
