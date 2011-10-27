@@ -7,14 +7,9 @@ class prologix_USB(object):
 
     """
 
-    def __init__(self, port='/dev/ttyUSBgpib'):
-        # open log file
-        self.lf = open('prologix.log', 'a')
-        self.start = time()
-        self.lf.write('\nplx initialized at %.2f\n\n' % self.start)
-
+    def __init__(self, port='/dev/ttyUSBgpib', log=False):
         # create a serial port object
-        self.bus = Serial(port, baudrate=115200, rtscts=1, log='plx.log')
+        self.bus = Serial(port, baudrate=115200, rtscts=1, log=log)
         # if this doesn't work, try settin rtscts=0
 
         # flush whatever is hanging out in the buffer
@@ -31,13 +26,10 @@ class prologix_USB(object):
 
     def write(self, command, lag=0.5):
         self.bus.write("%s\r" % command)
-        self.lf.write('%.2f write: %s\n' % (self.clock(), command))
         sleep(lag)
 
     def readall(self):
         resp = self.bus.readall()
-        self.lf.write('%.2f read: ' % self.clock())
-        self.lf.write(resp)
         return resp.rstrip()
 
     def ask(self, query, *args, **kwargs):
