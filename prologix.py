@@ -21,9 +21,6 @@ class prologix_USB(object):
         # so we're not always asking for it
         self._addr = self.addr
 
-    def clock(self):
-        return time() - self.start
-
     def write(self, command, lag=0.5):
         self.bus.write("%s\r" % command)
         sleep(lag)
