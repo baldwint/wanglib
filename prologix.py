@@ -1,5 +1,5 @@
 from wanglib.util import Serial
-from time import sleep, time
+from time import sleep
 
 class prologix_USB(object):
     """
@@ -18,10 +18,12 @@ class prologix_USB(object):
         self.savecfg = False
 
         # keep a local copy of the current address
+        # and read-after write setting
         # so we're not always asking for it
         self._addr = self.addr
+        self._auto = self.auto
 
-    def write(self, command, lag=0.5):
+    def write(self, command, lag=0.1):
         self.bus.write("%s\r" % command)
         sleep(lag)
 
@@ -46,12 +48,27 @@ class prologix_USB(object):
         return self._addr
     @addr.setter
     def addr(self, new_addr):
-        # change to the new address
-        self.write("++addr %d" % new_addr)
         # update local record
         self._addr = new_addr
+        # change to the new address
+        self.write("++addr %d" % new_addr)
+        # we update the local variable first because the 'write'
+        # command may have a built-in lag. if we intterupt a program
+        # during this period, the local attribute will be wrong
 
-    # settings specific to the Prologix controller
+    @property
+    def auto(self):
+        """
+        should the controller automatically let instruments talk
+        after writing to them? 
+
+        """
+        self._auto = bool(int(self.ask("++auto")))
+        return self._auto
+    @auto.setter
+    def auto(self, val):
+        self._auto = bool(val)
+        self.write("++auto %d" % self._auto)
 
     def version(self):
         """ Query the Prologix firmware version """
@@ -59,6 +76,7 @@ class prologix_USB(object):
 
     @property
     def savecfg(self):
+        """ should the controller save settings in EEPROM?  """
         resp = self.ask("++savecfg")
         return bool(int(resp))
     @savecfg.setter
@@ -66,8 +84,14 @@ class prologix_USB(object):
         d = bool(val)
         self.write("++savecfg %d" % d)
 
+    def instrument(self, addr, **kwargs):
+        """
+        factory function for instrument objects.
 
-
+        addr -- the GPIB address for an instrument
+                attached to this controller.
+        """
+        return instrument(self, addr, **kwargs)
 
 
 class instrument(object):
@@ -87,28 +111,61 @@ class instrument(object):
 
     """
 
-    def __init__(self, controller, addr):
+    def __init__(self, controller, addr,
+                 delay=0.5, auto=True):
+        """
+        Constructor method for instrument objects.
+
+        required arguments:
+            controller -- the prologix controller instance
+                to which this instrument is attached.
+            addr -- the address of the instrument
+                on controller's GPIB bus.
+
+        keyword arguments:
+            delay -- seconds to wait after each write.
+            auto -- read-after-write setting.
+
+        """
         self.addr = addr
+        self.auto = auto
+        self.delay = delay
         self.controller = controller
 
     def get_priority(self):
         """
-        switch the controller address to the
-        address of this instrument
+        configure the controller to address this instrument
 
         """
+        # configure instrument-specific settings
+        if self.auto != self.controller._auto:
+            self.controller.auto = self.auto
+        # switch the controller address to the
+        # address of this instrument
         if self.addr != self.controller._addr:
             self.controller.addr = self.addr
 
     def ask(self, command):
-        self.get_priority()
-        return self.controller.ask(command)
+        """ query the instrument.  """
+        # clear stray bytes from the buffer.
+        # hopefully, there will be none.
+        # if there are, print a warning
+        clrd = self.controller.bus.inWaiting()
+        if clrd > 0:
+            print clrd, 'bytes cleared'
+        self.read()  # clear the buffer
+        self.write(command)
+        return self.read()
 
     def read(self): # behaves like readall
+        """ read response from instrument.  """
         self.get_priority()
+        if not self.auto:
+            # explicitly tell instrument to talk.
+            self.controller.write('++read eoi', lag=self.delay)
         return self.controller.readall()
 
     def write(self, command):
         self.get_priority()
-        self.controller.write(command)
+        self.controller.write(command, lag=self.delay)
 
