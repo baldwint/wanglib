@@ -7,15 +7,13 @@ This module implements plotting of data while it is being gathered.
 
 from pylab import *
 
-def plotgen(x, data_gen, *args, **kwargs):
+def plotgen(data_gen, *args, **kwargs):
     """
     take X/Y data from a generator, and plot it at the same time.
 
     arguments:
-        x           -- the x-axis data.
-        data_gen    -- a generator to produce y data.
-                       should take x as the argument and yield
-                       y values as they are available.
+        data_gen    -- a generator to produce x and y data.
+                       should yield x and y values as they are available.
 
     any extra arguments beyond these are passed to the
     generator you provide.
@@ -24,20 +22,22 @@ def plotgen(x, data_gen, *args, **kwargs):
 
     # instantiate the provided generator.
     # pass extra args/kwargs to it.
-    gen = data_gen(x, *args, **kwargs)
+    gen = data_gen(*args, **kwargs)
 
-    # make a line. Initially, just zeros.
-    # this also casts y to the float type.
-    line, = plot(x, x * 0.)
-    y = line.get_ydata()
-    draw()
+    # maintain x and y lists (we'll append to these as we go)
+    x = []
+    y = []
+    # make a (initially blank) line.
+    line, = plot(x, y) 
 
     i = 0
     for pt in gen: # for new y value generated
-        y[i] = pt  # update our y array
+        
+        x.append(pt[0])
+        y.append(pt[1])
         i+=1
 
-        line.set_data(x[:i], y[:i])     # update plot with new data
+        line.set_data(x, y)     # update plot with new data
         line._invalid = True    # this clears the cache or something
         gca().relim()           # recalculate the limits
         gca().autoscale_view()  # autoscale the bounds to include it all 
@@ -53,11 +53,11 @@ if __name__ == '__main__':
             sleep(0.1)
             rl = sin(2 * pi * pt) + 6
             rl += 0.1* randn()
-            yield rl
+            yield pt, rl
 
     ion()
 
     x = arange(0,4,0.1)
-    y = plotgen(x, silly_gen)
+    y = plotgen(silly_gen, x)
 
  
