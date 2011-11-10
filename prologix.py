@@ -167,7 +167,7 @@ class instrument(object):
     """
 
     def __init__(self, controller, addr,
-                 delay=0.5, auto=True):
+                 delay=0.1, auto=True):
         """
         Constructor method for instrument objects.
 
@@ -216,7 +216,6 @@ class instrument(object):
         """ read response from instrument.  """
         self.get_priority()
         if not self.auto:
-            pass
             # explicitly tell instrument to talk.
             self.controller.write('++read eoi', lag=self.delay)
         return self.controller.readall()
