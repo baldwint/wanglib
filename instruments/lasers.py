@@ -32,18 +32,29 @@ class velocity6300(object):
 
     # use this behavior to make sensible error messages:
     def write(self, cmd):
+        """
+        issue a command to the laser.
+
+        unlike bus.write, this checks to make sure the laser
+        understood what it was told.
+        """
         resp = self.bus.ask(cmd)
         if resp != 'OK':
-            raise InstrumentError(resp)
+            msg = "laser didn't like command: %s. it says: %s"
+            raise InstrumentError(msg % (cmd,resp))
 
     def __init__(self, bus):
         self.bus = bus
         print self.bus.ask('*IDN?')
 
+    def stop_tracking(self):
+        """ exit track mode to ready mode. """
+        self.write('outp:trac off')
+
     @property
     def busy(self):
         """ is an operation in progress? """
-        return not bool(int(self.bus.ask('*IDN?')))
+        return not bool(int(self.bus.ask('*OPC?')))
         
     @property
     def on(self):
@@ -65,6 +76,7 @@ class velocity6300(object):
     def wl(self, val):
         # can take a numerical value, or 'min' or 'max'
         self.write('wave %s' % val)
+        self.stop_tracking()
 
 #    @property
 #    def wl_set(self):
