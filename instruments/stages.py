@@ -12,7 +12,7 @@ which is on address 9 of a GPIB network run by a prologix
 controller 'plx', you might do this:
 
 >>> from wanglib.instruments.stages import ESP300_stage
->>> esp = instrument(plx, 9)
+>>> esp = plx.instrument(9)
 >>> example_stage = ESP300_stage(1, esp)
 
 Here the 'esp' object is the prologix GPIB connection,
@@ -37,20 +37,19 @@ the delay in picoseconds, etc.
 
 """
 
-from wanglib.util import Gpib, num, InstrumentError
+from wanglib.util import num, InstrumentError
 from time import sleep
 
 class newport_stage(object):
     """
     Base class for newport stage controllers.
 
+    Don't instantiate it!
+
     Commands common to the ESP300 and MM3000 are defined
     here.
 
     """
-
-    gpib_default = None # overwrite with a default gpib addr
-                        # when inheriting
 
     # necessary properties to define when inheriting:
     #     busy
@@ -65,12 +64,7 @@ class newport_stage(object):
 
     def __init__(self, axisnum, bus=None):
         self.axis = int(axisnum)
-        if self.gpib_default is None:
-            return
-        elif bus is None:
-            self.bus = Gpib(0, self.gpib_default)
-        else:
-            self.bus = bus
+        self.bus = bus
 
     def cmd(self, string):
         """ Prepend the axis number to a command. """
@@ -139,10 +133,11 @@ class newport_stage(object):
 class ESP300_stage(newport_stage):
     """
     A single stage controlled by the ESP300.
+
+    The ESP300 is typically on GPIB address 9.
     
     """
 
-    gpib_default = 9
     _move_to_limit_cmd = 'MT'
     _get_abs_pos_cmd = 'PA?'
     _set_abs_pos_cmd = 'PA%f'
@@ -251,13 +246,14 @@ class ESP300_stage(newport_stage):
 
 class MM3000_stage(newport_stage):
     """
-    A Newport MM3000 motion controller.
+    A single stage controlled by the Newport MM3000 motion controller.
 
     Firmware version: 2.2
+
+    The MM3000 is typically on GPIB address 8.
     
     """
 
-    gpib_default = 8
     _move_to_limit_cmd = 'ML'
     _get_abs_pos_cmd = 'TP'
     _set_abs_pos_cmd = 'PA%d' # MM3000 only supports integers!

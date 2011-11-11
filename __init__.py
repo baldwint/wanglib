@@ -14,7 +14,7 @@ gathering easy.
 The core contains these modules:
     
     util -- configures the gpib interface (if any): pyVisa or linux-gpib
-            implements a custom serial implementation
+            implements a custom serial interface
             does some strange data fitting / calibration stuff.
     prologix -- drivers for prologix GPIB controllers (USB and Ethernet)
     Gpib -- the linux-gpib python wrapper, modified to use new style classes.

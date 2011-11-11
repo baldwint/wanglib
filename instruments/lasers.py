@@ -1,4 +1,9 @@
-# LAAAAASSSERZ!!!
+#!/usr/bin/env python
+
+"""
+Interfaces to New Focus diode laser controllers.
+
+"""
 
 from wanglib.util import InstrumentError
 

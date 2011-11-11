@@ -1,26 +1,28 @@
+#!/usr/bin/env python
+
 """
-This module contains a class definition for each of
-several lock-in amplifiers present in the lab.
+Interfaces to lock-in amplifiers.
 
 """
 
-from wanglib.util import InstrumentError, Gpib
+from wanglib.util import InstrumentError
 
 class srs830(object):
     """ A Stanford Research Systems model SR830 DSP lock-in.
 
-    Typically controlled over GPIB, address 8.
+    Typically controlled over GPIB, address 8. Instantiate like:
 
-    If you're connecting differently,
-    pass the bus object to the constructor.
+    >>> li = srs830(plx.instrument(8))
+
+    where plx is a prologix controller.
+    pyVISA instruments should also work fine.
+
+    So far, this class only implements the ADC functionality.
 
     """
 
-    def __init__(self,bus=None):
-        if bus is not None:
-            self.bus = bus
-        else:
-            self.bus = Gpib(0, 8)
+    def __init__(self, bus):
+        self.bus = bus
 
     ADC_cmd = "OAUX?%d"
     ADC_range = (1, 2, 3, 4)
@@ -37,15 +39,16 @@ class srs830(object):
 class egg5110(object):
     """ An EG&G model 5110 lock-in.
 
-    Typically controlled over GPIB, address 12. If you're connecting
-    differently, bass the bus object to the constructor.
+    Typically controlled over GPIB, address 12. Instantiate like:
+
+    >>> li = egg5110(plx.instrument(12))
+
+    where plx is a prologix controller.
+    pyVISA instruments should also work fine.
 
     """
-    def __init__(self,bus=None):
-        if bus is not None:
-            self.bus = bus
-        else:
-            self.bus = Gpib(0, 12)
+    def __init__(self, bus):
+        self.bus = bus
 
         # verify lockin identity
         resp = self.bus.ask("ID")
@@ -178,14 +181,3 @@ class egg5110(object):
         cmd = "LTS %d" % bool(arg)
         self.bus.write(cmd)
 
-
-    
-
-    
-if __name__ == "__main__":
-    import sys,csv
-    address = sys.argv[1]
-    egg = egg5110("GPIB::%d" % int(address))
-    for step in range(0,100):
-        print "%.2f %s" % egg.x
-        

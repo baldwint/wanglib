@@ -1,27 +1,23 @@
-# this module contains methods to operate
-# the agilent 8648A RF signal generator
-# which runs on GPIB address 18
-#
-# tkb
+#!/usr/bin/env python
 
-from wanglib.util import Gpib 
+"""
+Interfaces to Agilent RF signal generators.
+
+"""
+
 from time import sleep
 
 class ag8648(object):
     """
     The Agilent 8648A/B/C/D RF signal generator.
 
-    By default, this will look for a signal generator on
-    the GPIB network at address 18. This is the factory default. 
+    These instruments are configured to work on GPIB address 18
+    by factory default. To instantiate one plugged in to prologix
+    controller plx, do this:
 
-    >>> rf = ag8648()
+    >>> rf = ag8648(plx.instrument(18))
 
-    If you want to talk to a different one, you'll need to 
-    specify where it's at. For example, here's one at Gpib
-    address 19.
-
-    >>> from wanglib.util import Gpib
-    >>> rf = ag8648(Gpib(0, 19))
+    Other instrument objects (e.g. pyVISA) should also work.
 
     Attributes:
 
@@ -32,16 +28,29 @@ class ag8648(object):
     The signal generator can be controlled remotely 
     by setting these attributes of the instance.
 
+    >>> rf.amp
+    -5.0
+    >>> rf.amp = -10
+    >>> rf.amp
+    -10.0
+
     """
 
-    def __init__(self, bus=None):
-        if bus is not None:
-            self.bus = bus
-        else:
-            self.bus = Gpib(0, 18)
+#    You can also use linux-gpib, if you use the wanglib version of the Gpib
+#    driver. this class emulates the pyVISA interface.
+#    For example, here's one at gpib address 19:
+#
+#    >>> from wanglib.util import Gpib
+#    >>> rf = ag8648(Gpib(0, 19))
+#
+
+    def __init__(self, bus):
+        self.bus = bus
+        #TODO: verify connection
 
     @property
     def on(self):
+        """ is RF output on? """
         resp  = self.bus.ask("OUTP:STAT?")
         return bool(int(resp))
 
@@ -55,6 +64,7 @@ class ag8648(object):
 
     @property
     def amp(self):
+        """ RF amplitude in dBm.  """
         resp  = self.bus.ask("POW:AMPL?")
         return float(resp)
 
@@ -72,7 +82,7 @@ class ag8648(object):
 
     @property
     def freq(self):
-        """ Return the RF frequency in MHz.  """
+        """ RF frequency in MHz.  """
         resp  = self.bus.ask("FREQ:CW?")
         return float(resp) / 10**6
 
@@ -92,6 +102,12 @@ class ag8648(object):
         self.bus.write(cmd)
 
     def blink(self, interval = 1.):
+        """
+        Blink the RF output on and off with time.
+
+        Useful when aligning AOMs.
+
+        """
         return_state = self.on
         while True:
             try:
@@ -102,8 +118,4 @@ class ag8648(object):
             except KeyboardInterrupt:
                 self.on = return_state
                 break
-
-
-
-
 
