@@ -46,9 +46,17 @@ def plotgen(data_gen, *args, **kwargs):
 
 if __name__ == '__main__':
 
+    # example usage of the plotgen function.
+    # run this file as a script to test.
+
     from time import sleep
  
     def silly_gen(x):
+        """
+        a silly generator function producing 'data'
+        (really just a sine wave plus noise)
+
+        """
         for pt in x:
             sleep(0.1)
             rl = sin(2 * pi * pt) + 6
