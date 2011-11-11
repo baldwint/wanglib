@@ -120,6 +120,19 @@ if ser_avail:
             sleep(lag)
             return self.readall()
 
+
+# ------------------------------------------------------
+# up to this point, this file has dealt with customizing
+# communication interfaces (GPIB / RS232). What follows
+# are more random (though useful) utilities.
+# 
+# The two halves of this file serve rather disparate
+# needs, and should probably be broken in two pieces.
+# Before I actually do that I'd like to trim down 
+# dependencies in the rest of the library - I think that
+# will go a long way in reducing complexity.
+# ------------------------------------------------------
+
 def num(string):
     """
     convert string to number. decide whether to convert to int or float.
