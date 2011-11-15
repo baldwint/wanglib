@@ -7,35 +7,28 @@ This module implements plotting of data while it is being gathered.
 
 from pylab import *
 
-def plotgen(data_gen, *args, **kwargs):
+def plotgen(gen, *args, **kwargs):
     """
     take X/Y data from a generator, and plot it at the same time.
 
     arguments:
-        data_gen    -- a generator to produce x and y data.
-                       should yield x and y values as they are available.
+        gen    -- a generator object yielding x,y pairs.
 
-    any extra arguments beyond these are passed to the
-    generator you provide.
+    any extra arguments beyond these are passed to the plot function.
 
     """
-
-    # instantiate the provided generator.
-    # pass extra args/kwargs to it.
-    gen = data_gen(*args, **kwargs)
 
     # maintain x and y lists (we'll append to these as we go)
     x = []
     y = []
-    # make a (initially blank) line.
-    line, = plot(x, y) 
 
-    i = 0
+    # make a (initially blank) line.
+    line, = plot(x, y, *args, **kwargs) 
+
     for pt in gen: # for new y value generated
         
         x.append(pt[0])
         y.append(pt[1])
-        i+=1
 
         line.set_data(x, y)     # update plot with new data
         line._invalid = True    # this clears the cache or something
@@ -66,6 +59,6 @@ if __name__ == '__main__':
     ion()
 
     x = arange(0,4,0.1)
-    y = plotgen(silly_gen, x)
+    y = plotgen(silly_gen(x))
 
  
