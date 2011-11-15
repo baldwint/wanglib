@@ -45,6 +45,9 @@ class velocity6300(object):
         """
         resp = self.bus.ask(cmd)
         if resp != 'OK':
+            # try one more time
+            resp = self.bus.ask(cmd)
+        if resp != 'OK':
             msg = "laser didn't like command: %s. it says: %s"
             raise InstrumentError(msg % (cmd,resp))
 
@@ -81,7 +84,7 @@ class velocity6300(object):
     def wl(self, val):
         # can take a numerical value, or 'min' or 'max'
         self.write('wave %s' % val)
-        self.stop_tracking()
+#        self.stop_tracking()
 
 #    @property
 #    def wl_set(self):
@@ -130,5 +133,8 @@ class velocity6300(object):
     @property
     def current(self):
         """ return current level in the diode (mA)"""
-        return float(self.bus.ask('sens:cur:diod'))
+        return float(self.bus.ask('sens:curr:diod'))
+    @current.setter
+    def current(self, val):
+        self.write('curr %s' % val)
 
