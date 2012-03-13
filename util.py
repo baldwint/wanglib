@@ -8,59 +8,11 @@ class InstrumentError(Exception):
     pass
 
 try:
-    import visa as visa_mod
-except ImportError:
-    visa_avail = False
-else:
-    visa_avail = True
-
-try:
-    import Gpib as Gpib_mod
-except ImportError:
-    gpib_avail = False
-else:
-    gpib_avail = True
-
-try:
     import serial
 except ImportError:
     ser_avail = False
 else:
     ser_avail = True
-
-
-if gpib_avail:
-    class Gpib(Gpib_mod.Gpib):
-        """ Extension of the linux-gpib Gpib module. """
-
-        def read(self, *args, **kwargs):
-            """ Read from Gpib device, stripping trailing space. """
-            result = super(Gpib, self).read(*args, **kwargs)
-            return result.rstrip()
-
-        def ask(self, query):
-            """
-            Write then read.
-
-            Shadows the usual Gpib.ask() method,
-            which does something weird.
-
-            """
-            self.write(query)
-            return self.read()
-
-        
-elif visa_avail:
-    def Gpib(board, addr, timeout=None):
-        inst = visa_mod.instrument("GPIB%d::%d" % (board, addr))
-        if timeout is not None:
-            inst.timeout = timeout
-        return inst
-else:
-    #raise InstrumentError("no GPIB interface found")
-    pass
-
-
 
 if ser_avail:
     class Serial(serial.Serial):
