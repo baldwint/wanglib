@@ -1,6 +1,6 @@
 """This file provides useful utilities for the wanglib package."""
 
-from time import sleep, time, ctime, ctime
+from time import sleep, time, ctime
 from numpy import array
 
 class InstrumentError(Exception):
@@ -13,6 +13,14 @@ except ImportError:
     ser_avail = False
 else:
     ser_avail = True
+
+def show_newlines(string):
+    """
+    replace CR+LF with the words "CR" and "LF".
+    useful for debugging.
+
+    """
+    return string.replace('\r', '<CR>').replace('\n', '<LF>')
 
 if ser_avail:
     class Serial(serial.Serial):
@@ -48,7 +56,7 @@ if ser_avail:
             if self.logfile:
                 self.lf.write('% 8.2f ' % self.clock())
                 self.lf.write('%5s: ' % str(event)[:5])
-                self.lf.write('%s\n' % data)
+                self.lf.write('%s\n' % show_newlines(data))
 
         def clock(self):
             return time() - self.start
