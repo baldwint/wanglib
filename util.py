@@ -1,6 +1,6 @@
 """This file provides useful utilities for the wanglib package."""
 
-from time import sleep, time
+from time import sleep, time, ctime, ctime
 from numpy import array
 
 class InstrumentError(Exception):
@@ -40,21 +40,26 @@ if ser_avail:
             """
             self.lf = open(fname, 'a')
             self.start = time()
-            self.lf.write('\nstart logging at %.2f\n\n' % self.start)
+            self.lf.write('\n\nstart logging at %s\n\n' % ctime(self.start))
+            self.lf.write('time (s) ' + 'event  ' + 'data' +'\n')
+            self.lf.write('-'*8 + ' ' + '-'*5 + '  ' + '-'*4 + '\n\n')
+
+        def log_something(self, event, data):
+            if self.logfile:
+                self.lf.write('% 8.2f ' % self.clock())
+                self.lf.write('%5s: ' % str(event)[:5])
+                self.lf.write('%s\n' % data)
 
         def clock(self):
             return time() - self.start
 
         def write(self, data):
             super(Serial, self).write(data)
-            if self.logfile:
-                self.lf.write('%.2f write: %s\n' % (self.clock(), data))
+            self.log_something('write', data)
 
         def read(self, size=1):
             resp = super(Serial, self).read(size)
-            if self.logfile:
-                self.lf.write('%.2f read: ' % self.clock())
-                self.lf.write(resp)
+            self.log_something('read', resp)
             return resp
         
         def readall(self):
