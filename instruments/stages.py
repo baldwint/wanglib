@@ -135,6 +135,20 @@ class ESP300_stage(newport_stage):
     A single stage controlled by the ESP300.
 
     The ESP300 is typically on GPIB address 9.
+
+    To use over RS232, use the following parameters:
+        baudrate: 19200
+        rtscts: True
+        term_chars: '\r'
+
+    For example:
+
+    >>> from wanglib.util import Serial
+    >>> esp = Serial('/dev/ttyUSB', baudrate=19200, timeout=10, 
+    ...             rtscts=1, log='esp300.log', term_chars="\r")
+    >>> my_stage = ESP300_stage(1, esp)
+
+    will make an object corresponding to axis 1 of the stage.
     
     """
 

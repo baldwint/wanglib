@@ -38,6 +38,9 @@ if ser_avail:
             self.logfile = kwargs.pop('log', False)
             if self.logfile:
                 self.start_logging(self.logfile)
+            # take default termination character
+            # by default, append empty string
+            self.term_chars = kwargs.pop('term_chars', '')
             # hand off to standard serial init function
             super(Serial, self).__init__(*args, **kwargs)
 
@@ -62,8 +65,8 @@ if ser_avail:
             return time() - self.start
 
         def write(self, data):
-            super(Serial, self).write(data)
-            self.log_something('write', data)
+            super(Serial, self).write(data + self.term_chars)
+            self.log_something('write', data + self.term_chars)
 
         def read(self, size=1):
             resp = super(Serial, self).read(size)
