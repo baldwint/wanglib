@@ -204,6 +204,22 @@ def fit(x, y, func, guess):
     else:
         print "fail!"
 
+def gaussian(p, x):
+    """
+    gaussian function.
+
+    p is a 4-component parameter vector defining:
+        0 : a baseline offset
+        1 : the area between curve and baseline
+        2 : the location of the maximum
+        3 : the standard deviation
+
+    """
+    
+    return p[0] + \
+    exp(-((x - p[2])**2)/(2 * p[3]**2)) * \
+    p[1]  /  (sqrt(2 * pi) * p[3])
+
 # density plot was previously defined here
 from wanglib.pylab_extensions import density_plot
 
