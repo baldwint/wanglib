@@ -224,6 +224,47 @@ def gaussian(p, x):
 # density plot was previously defined here
 from wanglib.pylab_extensions import density_plot
 
+def scanner(xvals, set, get, lag = 0.3):
+    """
+    generic scan generator. (spectra, delay scans, whatever).
+
+    Arguments:
+        xvals - values of x over which to scan.
+        set - attribute to set on each step, given as a 
+                (object, attribute_name) tuple 
+                or a function taking value as argument
+        get - attribute to measure on each step, given as a 
+                (object, attribute_name) tuple 
+                or a function returning measurement value
+        lag - seconds to sleep between setting and measuring
+
+    Example: while scanning triax wavelength, measure lockin x
+    >>> from triax.instruments.lockins import egg5110
+    >>> from triax.instruments.spex750m import triax320
+    >>> from wanglib.pylab_extensions import plotgen
+
+    >>> tr = triax320()
+    >>> li = egg5110(instrument(plx,12))
+    >>> wls = arange(770, 774, .1)
+
+    >>> gen = scanner(wls, set=(tr,'wl'), get=(li,'x'), **kwargs)
+    >>> result = plotgen(gen)
+    
+    """
+    for X in xvals:
+        if hasattr(set,'__call__'):
+            set(X)
+        else:
+            set[0].__setattr__(set[1], X)
+        sleep(lag)
+        if hasattr(get,'__call__'):
+            Y = get(X)
+        else:
+            Y = get[0].__getattribute__(get[1])
+        yield X,Y
+
+
+
 if __name__ == "__main__":
     from pylab import *
     cal = calibration()
