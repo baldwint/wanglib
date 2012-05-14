@@ -2,6 +2,7 @@
 
 from time import sleep, time, ctime
 from numpy import array
+from numpy import exp, sqrt, pi
 
 class InstrumentError(Exception):
     """Raise this when talking to instruments fails."""
