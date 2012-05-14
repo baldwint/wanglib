@@ -211,7 +211,12 @@ class spex750m(object):
         self.rel_move(distance_to_move)
 
     wavelength = property(get_wavelength, set_wavelength)
+
+    # abbreviate 'wavelength' to 'wl'
+    get_wl = get_wavelength
+    set_wl = set_wavelength
     wl = wavelength
+
 
 # the triax series monochromators add some features
 # define a new class which inherits from spex750m
@@ -263,6 +268,10 @@ class triax320(spex750m):
             sleep(0.050)
 
     wavelength = property(get_wavelength, set_wavelength)
+
+    # abbreviate 'wavelength' to 'wl'
+    get_wl = get_wavelength
+    set_wl = set_wavelength
     wl = wavelength
 
     # general utilities for motorized slits.

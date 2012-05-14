@@ -27,7 +27,7 @@ class srs830(object):
     ADC_cmd = "OAUX?%d"
     ADC_range = (1, 2, 3, 4)
 
-    def getADC(self,n):
+    def get_ADC(self,n):
         """ read one of the ADC ports. Return value in volts."""
         if n not in self.ADC_range:
             err = "Indicate ADC in range %s" % (self.ADC_range) 
@@ -80,12 +80,12 @@ class egg5110(object):
                      20: (500,'mV'), \
                      21: (1,'V')}
     
-    def getSensitivity(self):
+    def get_sensitivity(self):
         val = self.bus.ask("SEN")
         return self.sensitivities[int(val)]
-    def setSensitivity(self,code):
+    def set_sensitivity(self,code):
         self.bus.write("SEN %d" % code)
-    sensitivity = property(getSensitivity,setSensitivity)
+    sensitivity = property(get_sensitivity,set_sensitivity)
 
     # time constant functions
 
@@ -103,12 +103,12 @@ class egg5110(object):
                   11: (100,'s'), \
                   12: (300,'s')}
 
-    def getTimeconst(self):
+    def get_timeconst(self):
         val = self.bus.ask("TC")
         return self.timeconsts[int(val)]
-    def setTimeconst(self,code):
+    def set_timeconst(self,code):
         self.bus.write("TC %d" % code)
-    timeconst = property(getTimeconst,setTimeconst)
+    timeconst = property(get_timeconst,set_timeconst)
 
     # measurement functions
 
@@ -136,27 +136,29 @@ class egg5110(object):
             sens,unit = self.sensitivity
             return fraction * sens, unit
 
-    @property
-    def x(self):
+    def get_x(self):
         return self.measure('X')
-    @property
-    def y(self):
-        return self.measure('Y')
-    @property
-    def r(self):
-        return self.measure('MAG')
+    x = property(get_x)
 
-    def getPhase(self):
+    def get_y(self):
+        return self.measure('Y')
+    y = property(get_y)
+
+    def get_r(self):
+        return self.measure('MAG')
+    r = property(get_r)
+
+    def get_phase(self):
         # phase measurements come in millidegrees
         # so convert them to degrees
         multiplier = float(1) / 1000
         response = self.bus.ask('PHA')
         return int(response) * mulitplier, 'degrees'
-    phase = property(getPhase)
+    phase = property(get_phase)
 
     # adc function
 
-    def getADC(self,n):
+    def get_ADC(self,n):
         # read one of the four ADC ports
         if n not in range(1,4):
             raise InstrumentError("Indicate ADC between 1 and 4")

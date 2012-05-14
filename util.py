@@ -248,6 +248,8 @@ def scanner(xvals, set, get, lag = 0.3):
     >>> wls = arange(770, 774, .1)
 
     >>> gen = scanner(wls, set=(tr,'wl'), get=(li,'x'), **kwargs)
+    >>> # OR, a little nicer:
+    >>> gen = scanner(wls, tr.set_wl, li.get_x, **kwargs)
     >>> result = plotgen(gen)
     
     """
