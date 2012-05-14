@@ -71,6 +71,14 @@ the original pyVISA object as a sub-object of the ag8648 instance.
 >>> rf.bus.ask("FREQ:CW?")
 '110000000'
 
+In this example, we wrapped a pyVISA instrument, but that's not required.
+The low-level instrument we started with can be anything that has similar
+read(), write(), and ask() methods:
+
+    pyVISA:        visa.instrument
+    linux-gpib:    wanglib.linux_gpib.Gpib
+    prologix:      wanglib.prologix.instrument
+
 It's also easy to add functionality to the class. The help() function
 tells you where to find the source file for any object on your
 computer.

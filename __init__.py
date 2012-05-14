@@ -13,11 +13,10 @@ gathering easy.
 
 The core contains these modules:
     
-    util -- configures the gpib interface (if any): pyVisa or linux-gpib
-            implements a custom serial interface
-            does some strange data fitting / calibration stuff.
+    util -- implements a custom serial interface
+            provides templates for fitting, calibration, and scan automation.
     prologix -- drivers for prologix GPIB controllers (USB and Ethernet)
-    Gpib -- the linux-gpib python wrapper, modified to use new style classes.
+    linux_gpib -- provides compatibility with systems using linux_gpib
     ccd --  a client for the CCD on the spex750m
     grating -- generates phase gratings for the SLM
 
