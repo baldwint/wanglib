@@ -260,7 +260,7 @@ def scanner(xvals, set, get, lag = 0.3):
             set[0].__setattr__(set[1], X)
         sleep(lag)
         if hasattr(get,'__call__'):
-            Y = get(X)
+            Y = get()
         else:
             Y = get[0].__getattribute__(get[1])
         yield X,Y
