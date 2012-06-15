@@ -131,15 +131,15 @@ class newport_stage(object):
         self.define_home()
 
 class ESP300_stage(newport_stage):
-    """
+    r"""
     A single stage controlled by the ESP300.
 
     The ESP300 is typically on GPIB address 9.
 
     To use over RS232, use the following parameters:
-        baudrate: 19200
-        rtscts: True
-        term_chars: '\r'
+        :baudrate: 19200
+        :rtscts:   True
+        :term_chars: '\\r'
 
     For example:
 

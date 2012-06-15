@@ -239,14 +239,13 @@ def scanner(xvals, set, get, lag = 0.3):
         lag - seconds to sleep between setting and measuring
 
     Example: while scanning triax wavelength, measure lockin x
+
     >>> from triax.instruments.lockins import egg5110
     >>> from triax.instruments.spex750m import triax320
     >>> from wanglib.pylab_extensions import plotgen
-
     >>> tr = triax320()
     >>> li = egg5110(instrument(plx,12))
     >>> wls = arange(770, 774, .1)
-
     >>> gen = scanner(wls, set=(tr,'wl'), get=(li,'x'), **kwargs)
     >>> # OR, a little nicer:
     >>> gen = scanner(wls, tr.set_wl, li.get_x, **kwargs)

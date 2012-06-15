@@ -13,6 +13,9 @@ GPIB). Each instrument object defined here wraps a serial.Serial or
 visa.instrument instance and uses its write/read/ask methods to
 accomplish common commands and readings specific to that instrument.
 
+Example usage
++++++++++++++
+
 Here's an example. We want to talk to an Agilent model 8648 RF signal
 generator using GPIB. We have pyVISA installed, and that makes GPIB
 talking a snap:
@@ -75,9 +78,9 @@ In this example, we wrapped a pyVISA instrument, but that's not required.
 The low-level instrument we started with can be anything that has similar
 read(), write(), and ask() methods:
 
-    pyVISA:        visa.instrument
-    linux-gpib:    wanglib.linux_gpib.Gpib
-    prologix:      wanglib.prologix.instrument
+    :pyVISA:        visa.instrument
+    :linux-gpib:    wanglib.linux_gpib.Gpib
+    :prologix:      wanglib.prologix.instrument
 
 It's also easy to add functionality to the class. The help() function
 tells you where to find the source file for any object on your

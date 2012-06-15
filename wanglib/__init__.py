@@ -5,12 +5,11 @@
 # tkb
 
 """
-:mod:`wanglib` --- Experimental control utilities for the Wang lab
-==================================================================
+Experimental control utilities for the Wang lab.
 
-When writing a script to control your experiment (or working interactively
-using the interpreter), use wanglib to make instrument control and data
-gathering easy.
+When writing a script to control your experiment (or working
+interactively using the interpreter), use :mod:`wanglib` to make
+instrument control and data gathering easy.
 
 The core contains these modules:
     

@@ -1,3 +1,12 @@
+"""
+This module provides drivers for Prologix GPIB controllers.
+
+Both USB and Ethernet controllers are supported. The
+:class:`prologix_ethernet` and :class:`prologix_USB` are designed to be
+mostly drop-in replacements for the :class:`visa.instrument` object.
+
+"""
+
 from wanglib.util import Serial
 from socket import socket, AF_INET, SOCK_STREAM, IPPROTO_TCP
 from time import sleep

@@ -3,6 +3,9 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
+:mod:`wanglib`
+##############
+
 .. automodule:: wanglib
 
 Contents
@@ -11,7 +14,22 @@ Contents
 Documentation contents:
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 3
+
+   instruments.rst
+   gpib.rst
+   pylab_extensions.rst
+   util.rst
+
+To Do
+=====
+
+I still haven't documented the following:
+
+:mod:`wanglib.ccd`
+    a client to the Labview program that controls the Jobin-Yvon CCD
+:mod:`wanglib.grating`
+    a bunch of old stuff for making SLM gratings/pulse shapers
 
 
 Indices and tables

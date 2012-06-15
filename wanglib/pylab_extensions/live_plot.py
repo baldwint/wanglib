@@ -5,7 +5,7 @@ This module implements plotting of data while it is being gathered.
 
 """
 
-from pylab import *
+from pylab import plot, gca, draw
 
 def plotgen(gen, *args, **kwargs):
     """
@@ -43,6 +43,7 @@ if __name__ == '__main__':
     # run this file as a script to test.
 
     from time import sleep
+    from pylab import *
  
     def silly_gen(x):
         """
