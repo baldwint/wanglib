@@ -11,9 +11,8 @@
 Contents
 ==================
 
-Documentation contents:
-
 .. toctree::
+   :numbered:
    :maxdepth: 3
 
    instruments.rst
