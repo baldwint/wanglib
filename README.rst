@@ -13,11 +13,11 @@ Documentation is hosted at http://wanglib.readthedocs.org.
 Installation
 ------------
 
-First, clone this repository:
+First, clone this repository::
 
     $ hg clone https://bitbucket.org/tkb/wanglib
 
-To install, run the setup script:
+To install, run the setup script::
 
     $ cd wanglib
     $ python setup.py install
