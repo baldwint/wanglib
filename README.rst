@@ -13,22 +13,22 @@ Documentation is hosted at http://wanglib.readthedocs.org.
 Installation
 ------------
 
-First, clone this repository::
+There are no versioned releases of `wanglib` - only a development
+version. Install this with `pip`::
 
-    $ hg clone https://bitbucket.org/tkb/wanglib
+    $ pip install --user -e hg+https://bitbucket.org/tkb/wanglib#egg=wanglib
 
-To install, run the setup script::
+The `--user` flag is a good idea to prevent conflicts with other users
+on the same machine. 
 
-    $ cd wanglib
-    $ python setup.py install
+This creates an editable clone of the repository in your home directory at
+`$HOME/src/wanglib`. To update to the latest version, change to this
+directory and do::
 
-If you go this route, you may want to use the `--home` or `--user`
-install options to prevent version conflicts with other users of the
-machine.
+    $ hg pull
 
-Alternatively, you could just symlink the `wanglib` directory you made
-into a place on your `sys.path`, like the `site_packages` directory.
-This is a better option if you want to help development of wanglib.
-
-
+You can make changes to wanglib by editing the files in this folder.
+By making changes, you are creating a branch. If you wish to contribute
+your changes back to me, create a repo for your branch on Bitbucket, and
+open a pull request.
 
