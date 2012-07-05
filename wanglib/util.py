@@ -224,6 +224,21 @@ def gaussian(p, x):
 # density plot was previously defined here
 from wanglib.pylab_extensions import density_plot
 
+def monitor(function, interval = 0.3, absolute = False):
+    """
+    periodically yield output of a function, along with timestamp
+
+    Arguments:
+        function - function to call
+        interval - how often to call it (default 0.3 seconds)
+        absolute - if True, yielded x values are seconds since epoch.
+                   otherwise, time since first yield.
+    """
+    start = 0 if absolute else time()
+    while True:
+        yield time() - start, function()
+        sleep(interval)
+
 def scanner(xvals, set, get, lag = 0.3):
     """
     generic scan generator. (spectra, delay scans, whatever).
