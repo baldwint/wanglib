@@ -27,6 +27,37 @@ class srs830(object):
     ADC_cmd = "OAUX?%d"
     ADC_range = (1, 2, 3, 4)
 
+    measurements = {
+        'X': 1,
+        'Y': 2,
+        'MAG': 3,
+        'R': 3,
+    }
+
+    def measure(self, command):
+        """
+        Measure one of the usual signals (X, Y, or MAG).
+        
+        Results are given in units of volts or degrees.
+
+        """
+        #TODO: parity with the other lockin re: units
+        cmd = 'OUTP?%d' % self.measurements[command]
+        response = self.bus.ask(cmd)
+        return float(response)
+
+    def get_x(self):
+        return self.measure('X')
+    x = property(get_x)
+
+    def get_y(self):
+        return self.measure('Y')
+    y = property(get_y)
+
+    def get_r(self):
+        return self.measure('MAG')
+    r = property(get_r)
+
     def get_ADC(self,n):
         """ read one of the ADC ports. Return value in volts."""
         if n not in self.ADC_range:
