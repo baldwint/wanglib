@@ -3,6 +3,7 @@
 from time import sleep, time, ctime
 from numpy import array
 from numpy import exp, sqrt, pi
+import logging
 
 class InstrumentError(Exception):
     """Raise this when talking to instruments fails."""
@@ -35,6 +36,8 @@ if ser_avail:
         """
 
         def __init__(self, *args, **kwargs):
+            # make an event logger
+            self.logger = logging.getLogger('wanglib.util.Serial')
             # take 'log' kwarg.
             self.logfile = kwargs.pop('log', False)
             if self.logfile:
@@ -46,32 +49,25 @@ if ser_avail:
             super(Serial, self).__init__(*args, **kwargs)
 
         def start_logging(self, fname):
-            """
-            start logging in/out data.
-
-            """
-            self.lf = open(fname, 'a')
-            self.start = time()
-            self.lf.write('\n\nstart logging at %s\n\n' % ctime(self.start))
-            self.lf.write('time (s) ' + 'event  ' + 'data' +'\n')
-            self.lf.write('-'*8 + ' ' + '-'*5 + '  ' + '-'*4 + '\n\n')
-
-        def log_something(self, event, data):
-            if self.logfile:
-                self.lf.write('% 8.2f ' % self.clock())
-                self.lf.write('%5s: ' % str(event)[:5])
-                self.lf.write('%s\n' % show_newlines(data))
-
-        def clock(self):
-            return time() - self.start
+            """ start logging read/write data to file. """
+            # make log file handler
+            lfh = logging.FileHandler(fname)
+            self.logger.addHandler(lfh)
+            # make log file formatter
+            lff = logging.Formatter('%(asctime)s %(message)s')
+            lfh.setFormatter(lff)
+            # set level low to log everything
+            self.logger.setLevel(1)
+            self.logger.debug('opened serial port')
 
         def write(self, data):
-            super(Serial, self).write(data + self.term_chars)
-            self.log_something('write', data + self.term_chars)
+            data += self.term_chars
+            super(Serial, self).write(data)
+            self.logger.debug('write: ' + show_newlines(data))
 
         def read(self, size=1):
             resp = super(Serial, self).read(size)
-            self.log_something('read', resp)
+            self.logger.debug(' read: ' + show_newlines(resp))
             return resp
         
         def readall(self):
