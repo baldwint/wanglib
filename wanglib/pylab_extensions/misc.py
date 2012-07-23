@@ -64,3 +64,33 @@ def sll(fname, index = -1, blink = True):
     else:
         # if the open statement succeeded, the filename is taken.
         raise ValueError('file exists. choose a different name')
+
+
+# some line-editing functions
+
+def relim(line):
+    """ redraw the line's figure to include the line. """
+    line.get_axes().relim()
+    line.get_axes().autoscale_view()
+    line.get_figure().canvas.draw()
+
+def apply_mask(line, mask):
+    """ mask x and y (to remove bad points, etc). """
+    x,y = line.get_data()
+    line.set_xdata(x[mask])
+    line.set_ydata(y[mask])
+    relim(line)
+
+def apply_offset(line, offset):
+    """ move the line up or down """
+    newdata = line.get_ydata() + offset
+    line.set_ydata(newdata)
+    relim(line)
+
+def apply_reference(line, ref):
+    """ apply reference data (for absorption spectra) """
+    absorption = numpy.log(ref/line.get_ydata())
+    line.set_ydata(absorption)
+    relim(line)
+
+
