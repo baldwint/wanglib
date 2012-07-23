@@ -77,8 +77,8 @@ def relim(line):
 def apply_mask(line, mask):
     """ mask x and y (to remove bad points, etc). """
     x,y = line.get_data()
-    line.set_xdata(x[mask])
-    line.set_ydata(y[mask])
+    y[numpy.invert(mask)] = None
+    line.set_ydata(y)
     relim(line)
 
 def apply_offset(line, offset):
