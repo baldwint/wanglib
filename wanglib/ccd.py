@@ -1,11 +1,30 @@
 #!/usr/bin/env python
 
 """
-Client routines for use with the CCD-2000 camera.
+Client routines for use with the CCD-2000 camera
 (generally attached to the Spex 750M spectrometer).
+These utilities talk to the CCD server LabView program 
+running on the old computer over TCP/IP.
 
 To configure the CCD server, refer to README file
 on the desktop of the CCD controller computer.
+
+Command-line invocation
++++++++++++++++++++++++
+
+For a simple live display from the CCD, invoke
+this module as a script:
+
+>>> python -m wanglib.ccd 800
+
+where 800 is the center wavelength of the grating
+(as read from the window).
+
+Client library
+++++++++++++++
+
+To integrate the CCD client into your own script,
+use :class:`labview_client`.
 
 """
 

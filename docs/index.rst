@@ -19,14 +19,13 @@ Contents
    gpib.rst
    pylab_extensions.rst
    util.rst
+   ccd.rst
 
 To Do
 =====
 
 I still haven't documented the following:
 
-:mod:`wanglib.ccd`
-    a client to the Labview program that controls the Jobin-Yvon CCD
 :mod:`wanglib.grating`
     a bunch of old stuff for making SLM gratings/pulse shapers
 
