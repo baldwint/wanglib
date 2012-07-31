@@ -1,11 +1,33 @@
 #!/usr/bin/env python
 
 """
-Client routines for use with the CCD-2000 camera.
+Client routines for use with the CCD-2000 camera
 (generally attached to the Spex 750M spectrometer).
+These utilities talk to the CCD server LabView program 
+running on the old computer over TCP/IP.
 
 To configure the CCD server, refer to README file
 on the desktop of the CCD controller computer.
+
+Command-line invocation
++++++++++++++++++++++++
+
+For a simple live display from the CCD, invoke
+this module as a script:
+
+>>> python -m wanglib.ccd 800
+
+where 800 is the center wavelength of the grating
+(as read from the window). You may need to specify
+the IP address of the CCD server. 
+
+>>> python -m wanglib.ccd --ip 128.223.23.240 800
+
+Client library
+++++++++++++++
+
+To integrate the CCD client into your own script,
+use :class:`labview_client`.
 
 """
 
@@ -41,7 +63,8 @@ class labview_client(object):
     To get a spectrum, use the get_spectrum method.
 
     """
-    def __init__(self, center_wl, host = "128.223.131.31", port = 3663):
+    def __init__(self, center_wl, host =
+                 "128.223.23.240", port = 3663):
         self.sock = s.socket(s.AF_INET,s.SOCK_STREAM)
         self.sock.connect((host,port))
         self.center_wl = center_wl
@@ -79,12 +102,46 @@ if __name__ == "__main__":
     # for command line invocation, take the center wavelength
     # as first argument and put on a live display.
     import pylab as p
-    from sys import argv
+    from optparse import OptionParser
+
+    from wanglib.util import gaussian
+    class fake_ccd(object):
+        """ dummy class for testing the gui """
+        def __init__(self, center_wl):
+            self.center_wl = center_wl
+
+        def get_spectrum(self):
+            x = p.arange(-10, 10, .1) + self.center_wl
+            param = [0, 100, self.center_wl, 4]
+            spice = n.random.randn(len(x))
+            y = gaussian(param, x) + spice
+            ccd = n.vstack((y,y))
+            return x,ccd
+
+    # parse command line options
+    parser = OptionParser()
+    parser.add_option('--ip', dest='ip', default=None,
+                      help='IP address of CCD server')
+    opts, args = parser.parse_args()
+
+    # read center wl from command line
+    center_wl = float(args[0])
+
+    # connect to server
+    if opts.ip is None:
+        clnt = labview_client(center_wl)
+    else:
+        clnt = labview_client(center_wl, host=opts.ip)
+    #clnt = fake_ccd(center_wl)
+
+    # make a plot
     p.ion()
     p.hold(False)
+    wl,ccd = clnt.get_spectrum()
+    line, = p.plot(wl,ccd.sum(axis=0))
     while True:
-        clnt = labview_client(argv[1])
+        # update it continuously
         wl,ccd = clnt.get_spectrum()
-        line, = p.plot(wl,ccd.sum(axis=0))
+        line.set_ydata(ccd.sum(axis=0))
         p.draw()
 
