@@ -128,7 +128,7 @@ if __name__ == "__main__":
     center_wl = float(args[0])
 
     # connect to server
-    if host is None:
+    if opts.ip is None:
         clnt = labview_client(center_wl)
     else:
         clnt = labview_client(center_wl, host=opts.ip)
