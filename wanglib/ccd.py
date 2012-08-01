@@ -13,15 +13,15 @@ Command-line invocation
 +++++++++++++++++++++++
 
 For a simple live display from the CCD, invoke
-this module as a script:
+this module as a script::
 
->>> python -m wanglib.ccd 800
+    $ python -m wanglib.ccd 800
 
 where 800 is the center wavelength of the grating
 (as read from the window). You may need to specify
-the IP address of the CCD server. 
+the IP address of the CCD server:: 
 
->>> python -m wanglib.ccd --ip 128.223.23.240 800
+    $ python -m wanglib.ccd --ip 128.223.23.240 800
 
 Client library
 ++++++++++++++
@@ -44,7 +44,7 @@ class labview_client(object):
     >>> ccd = labview_client(700)
 
     where 700 is the current wavelength of the spectrometer
-    (read from the window).
+    in nanometers (read from the window).
 
     This info is needed because the labview program calculates
     wavelength values (from dispersion calibration info) on the
@@ -55,12 +55,12 @@ class labview_client(object):
     For proper wavelength and dispersion info, you'll need to
     keep the client informed.
 
-    Whenever you move the spectrometer, set center_wl
+    Whenever you move the spectrometer, set ``center_wl``
     attribute to match:
 
     >>> ccd.center_wl = 750
 
-    To get a spectrum, use the get_spectrum method.
+    To get a spectrum, use :meth:`get_spectrum`.
 
     """
     def __init__(self, center_wl, host =
@@ -70,6 +70,21 @@ class labview_client(object):
         self.center_wl = center_wl
 
     def get_spectrum(self):
+        """
+        Takes a shot on the CCD.
+
+        Returns a 2-tuple ``(wl, ccd)``.
+
+        ``wl``: a 1-D array of the horizontal (wavelength) axis.
+        ``ccd``: a 2-D array of CCD counts.
+
+        To collapse ``ccd`` into a 1D array matching ``wl``,
+        sum over axis 0:
+
+        >>> wl,ccd = clnt.get_spectrum()
+        >>> line, = pylab.plot(wl,ccd.sum(axis=0))
+
+        """
 
         self.sock.send('Q')
         self.sock.send(str(100 * self.center_wl))

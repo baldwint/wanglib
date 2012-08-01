@@ -3,10 +3,68 @@ This module contains utilities for controlling Jobin-Yvon
 "SPEX" series monochromators over RS232 serial.
 
 Classes defined:
-    spex750m -- implements standard Jobin-Yvon serial commands
-                for simple spectrometers like the 750M.
-    triax320 -- extends the spex750m class with the more
-                sophisticated commands used by the triax.
+ * :class:`spex750m` -- implements standard Jobin-Yvon serial commands for simple spectrometers like the 750M.
+ * :class:`triax320` -- extends the :mod:`spex750m` class with the more sophisticated commands used by the triax.
+
+Tutorial
+++++++++
+
+both :class:`spex750m` and :class:`triax320` behave roughly the same
+way. In this tutorial we use the 750M for example. Instantiate like:
+
+>>> beast = spex750m()
+
+This opens a connection with the larger of the two spectrometers (the
+SPEX 750M.)
+
+Classes are configured to look for the spectrometer at the serial
+port where they are normally plugged in. To specify a different serial
+port, just pass it as an optional parameter when instantiating.
+For example, the following should be equivalent:
+
+>>> beast = spex750m(addr=1)
+>>> beast = spex750m(addr="COM2")   # on windows
+>>> beast = spex750m(addr="/dev/ttyS1")   # on linux
+
+It's a good idea to check that the spectrometer has been
+calibrated. This is unneccessary for the Triax, but on the 750M, we
+should check it. Having instantiated it as ``beast``, run
+
+>>> beast.wl
+790.
+
+This queries the current wavelength in nm, which ought to match
+the value displayed in the window. If it doesn't, run
+
+>>> beast.calibrate(800)
+
+This will re-set the calibration to 800nm:
+
+>>> beast.wl
+800.
+
+Optionally, you can calibrate it during the instantiation step,
+like so (either of these works):
+
+>>> beast = spex750m(calibration = 800)
+>>> beast = spex750m(800)
+
+where 800 is measured in nm.
+
+You can control the spectrometer using the methods documented below.
+For example, this performs a wavelength scan:
+
+>>> beast = spex750m(800)
+>>> beast.set_wavelength(750)
+>>> for i in range(200):
+...    beast.rel_move(0.5)
+...    while beast.is_busy():
+...        sleep(0.1)
+...    result = measure_something()
+...    print beast.get_wavelength(), result
+
+API documentation
++++++++++++++++++
 
 """
 
@@ -18,46 +76,9 @@ class spex750m(object):
     A class implementing standard Jobin-Yvon serial commands
     for simple spectrometers like the SPEX 750M.
     
-    Instantiate like:
-
-    >>> beast = spex750m()
-
-    To specify the serial port where the spex is plugged in,
-    just pass it as an optional parameter when instantiating.
-    For example, the following should be equivalent:
-
-    >>> beast = spex750m(addr=1)
-    >>> beast = spex750m(addr="COM2")   # on windows
-    >>> beast = spex750m(addr="/dev/ttyS1")   # on linux
-
     By default, this class is configured to look for the 750M 
-    plugged into /dev/ttyUSB0 (the first port on the USB-serial
+    plugged into ``/dev/ttyUSB0`` (the first port on the USB-serial
     adapter, when run under linux). 
-
-    To calibrate the spectrometer in the same step, pass
-    the current wavelength of the spectrometer as read from
-    the window, like so (either of these works):
-
-    >>> beast = spex750m(calibration = 800)
-    >>> beast = spex750m(800)
-
-    where 800 is measured in nm. You can also calibrate later, like
-
-    >>> beast = spex750m()
-    >>> # ... do things ...
-    >>> beast.calibrate(800)
-
-    Control the 750M using the provided methods. This example performs
-    a wavelength scan:
-
-    beast = spex750m(800)
-    beast.set_wavelength(750)
-    for i in range(200):
-        beast.rel_move(0.5)
-        while beast.is_busy():
-            sleep(0.1)
-        result = measure_something()
-        print beast.get_wavelength(), result
 
     """
     
@@ -94,9 +115,10 @@ class spex750m(object):
 
     def boot_status_check(self):
         """Check the boot status of the controller.
-        * : Just Autobauded
-        B : Boot Acknowledged
-        F : Just Flashed
+
+        - \* : Just Autobauded
+        - B : Boot Acknowledged
+        - F : Just Flashed
         """
         self.bus.readall()
         resp = self.bus.ask(' ')    # send autobaud character
@@ -111,7 +133,7 @@ class spex750m(object):
         """Reboot the controller if it's not responding"""
         return self.bus.ask("\xDE")
 
-    def hi_iq(self):
+    def _hi_iq(self):
         """Send the HI IQ character to the controller.
         (Duplicates functionality of F7-247.vi.)
         Returns True if it's ok to flash the controller
@@ -124,7 +146,7 @@ class spex750m(object):
         else:
             raise InstrumentError("750M HI IQ command failed")
 
-    def flash(self):
+    def _flash(self):
         """Flash the controller by sending the O2000<null>
         string to it.
         """
@@ -136,8 +158,8 @@ class spex750m(object):
         """
         status = self.boot_status_check()
         if status == "*":
-            self.hi_iq()    # * -> B
-            self.flash()    # B -> F
+            self._hi_iq()    # * -> B
+            self._flash()    # B -> F
         status = self.boot_status_check()
         if status == "F":
             return True
@@ -172,7 +194,7 @@ class spex750m(object):
         self.bus.write(cmd)
         self.wait_for_ok()
 
-    busyCodes = {"q": True,
+    _busyCodes = {"q": True,
                  "z": False }
 
     def is_busy(self):
@@ -180,7 +202,7 @@ class spex750m(object):
         self.bus.write("E")
         self.wait_for_ok()
         resp = self.bus.readall()
-        return self.busyCodes[resp]
+        return self._busyCodes[resp]
 
     def rel_move(self, distance_to_move):
         """Move the grating by the given
@@ -228,14 +250,14 @@ class triax320(spex750m):
 
     Instantiate as you would a spex750m. If you don't 
     specify a serial port, this class will assume the 
-    spectrometer is attached to /dev/ttyUSB1, the second
+    spectrometer is attached to ``/dev/ttyUSB1``, the second
     port on the USB-serial converter.
 
     Unlike the 750M, the Triax 
         - has motorized entrance and exit slits
         - zeroes its grating on power-up.
 
-    To perform a motor init on the triax, call moto_init.
+    To perform a motor init on the triax, call :meth:`motor_init`.
 
 
     """
@@ -276,14 +298,14 @@ class triax320(spex750m):
 
     # general utilities for motorized slits.
 
-    def move_slit_relative(self, slit_number, amount):
+    def _move_slit_relative(self, slit_number, amount):
         """
         Move a slit motor relatively.
 
         For example, the following moves slit 0
         by 5 steps:
 
-        >>> spec.move_slit_relative(0,5)
+        >>> spec._move_slit_relative(0,5)
 
         """
         self.bus.readall()
@@ -293,13 +315,13 @@ class triax320(spex750m):
             # wait for the motors to rest 
             sleep(0.050)
 
-    def get_slit_position(self, slit_number):
+    def _get_slit_position(self, slit_number):
         """
         Read the current absolute position of a slit.
 
         For example, read the absolute position of slit 0:
         
-        >>> spec.get_slit_position(0)
+        >>> spec._get_slit_position(0)
         5
 
         """
@@ -309,32 +331,74 @@ class triax320(spex750m):
         resp = self.bus.readall()
         return float(resp)
 
-    def set_slit_position(self, slit_number, position):
+    def _set_slit_position(self, slit_number, position):
         """
         Move a slit motor to a given absolute position.
 
         Zeroes things out ahead of time for backslash correction.
 
         """
-        start_position = self.get_slit_position(slit_number)
-        self.move_slit_relative(slit_number, 0 - start_position)
-        self.move_slit_relative(slit_number, position)
+        start_position = self._get_slit_position(slit_number)
+        self._move_slit_relative(slit_number, 0 - start_position)
+        self._move_slit_relative(slit_number, position)
 
     # parameters specific to the triax 320.
     # entrance slit: 0
     # exit slit: 2
 
     entr_slit = property(
-        lambda self: self.get_slit_position(0),
-        lambda self, val: self.set_slit_position(0, val)
+        lambda self: self._get_slit_position(0),
+        lambda self, val: self._set_slit_position(0, val)
     )
+    """
+    The entrance slit setting.
+
+    >>> beast.entr_slit
+    20.
+    >>> beast.entr_slit = 30
+    >>> beast.entr_slit
+    30.
+
+    """
+
     exit_slit = property(
-        lambda self: self.get_slit_position(2),
-        lambda self, val: self.set_slit_position(2, val)
+        lambda self: self._get_slit_position(2),
+        lambda self, val: self._set_slit_position(2, val)
     )
+    """
+    The exit slit setting.
+
+    >>> beast.exit_slit
+    20.
+    >>> beast.exit_slit = 30
+    >>> beast.exit_slit
+    30.
+
+    """
 
     @property
     def slits(self):
+        """
+        Return the entrance and exit slit settings together.
+
+        >>> beast.slits
+        (30., 30.)
+
+        Indicates that both slits are at 30. They can also be set
+        together:
+
+        >>> beast.slits = (20,30)
+        >>> beast.slits
+        (20., 30.)
+
+        sets the entrance slit to 20. There is a shortcut for setting
+        the slits to equal values:
+
+        >>> beast.slits = 20
+        >>> beast.slits
+        (20., 20.)
+
+        """
         return (self.entr_slit, self.exit_slit)
 
     @slits.setter
