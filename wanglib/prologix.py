@@ -1,9 +1,13 @@
 """
 This module provides drivers for Prologix GPIB controllers.
 
-Both USB and Ethernet controllers are supported. The
-:class:`prologix_ethernet` and :class:`prologix_USB` are designed to be
-mostly drop-in replacements for the :class:`visa.instrument` object.
+Both USB and Ethernet controllers are supported. 
+:class:`prologix_ethernet` and :class:`prologix_USB`
+represent two kinds of prologix controllers.
+
+:class:`instrument` objects encapsulate an attached
+instrument, and are designed to be a mostly drop-in
+replacement for the :class:`visa.instrument` object.
 
 """
 
@@ -11,7 +15,7 @@ from wanglib.util import Serial
 from socket import socket, AF_INET, SOCK_STREAM, IPPROTO_TCP
 from time import sleep
 
-class prologix_base(object):
+class _prologix_base(object):
     """
     Base class for prologix controllers (ethernet/usb)
 
@@ -33,7 +37,21 @@ class prologix_base(object):
 
     @property
     def addr(self):
-        """ which GPIB address is currently selected? """
+        """
+        The prologix controller can calk to one instrument
+        at a time. This sets the GPIB address of the
+        currently addressed instrument.
+
+        Use this attribute to set or check which instrument
+        is currently selected:
+
+        >>> plx.addr
+        9
+        >>> plx.addr = 12
+        >>> plx.addr
+        12
+
+        """
         # query the controller for the current address
         # and save it in the _addr variable (why not)
         self._addr = int(self.ask("++addr"))
@@ -51,8 +69,12 @@ class prologix_base(object):
     @property
     def auto(self):
         """
-        should the controller automatically let instruments talk
-        after writing to them? 
+        Boolean. Read-after-write setting.
+
+        The prologix 'read-after-write' setting can
+        automatically address instruments to talk after
+        writing to them. This is usually convenient, but
+        some instruments do poorly with it.
 
         """
         self._auto = bool(int(self.ask("++auto")))
@@ -63,12 +85,20 @@ class prologix_base(object):
         self.write("++auto %d" % self._auto)
 
     def version(self):
-        """ Query the Prologix firmware version """
+        """ Query the Prologix firmware version. """
         return self.ask("++ver")
 
     @property
     def savecfg(self):
-        """ should the controller save settings in EEPROM?  """
+        """
+        Boolean. Determines whether the controller should save its
+        settings in EEPROM.
+
+        It is usually best to turn this off, since it will
+        reduce wear on the EEPROM in applications that
+        involve talking to more than one instrument.
+
+        """
         resp = self.ask("++savecfg")
         if resp == 'Unrecognized command':
             raise Exception("""
@@ -83,15 +113,21 @@ class prologix_base(object):
 
     def instrument(self, addr, **kwargs):
         """
-        factory function for instrument objects.
+        Factory function for :class:`instrument` objects.
 
-        addr -- the GPIB address for an instrument
-                attached to this controller.
+        >>> plx.instrument(12)
+
+        is equivalent to
+
+        >>> instrument(plx, 12)
+
+        `addr` -- the GPIB address for an instrument
+                  attached to this controller.
         """
         return instrument(self, addr, **kwargs)
 
 
-class prologix_ethernet(prologix_base):
+class prologix_ethernet(_prologix_base):
     """
     Interface to a prologix gpib-ethernet controller.
 
@@ -124,7 +160,7 @@ class prologix_ethernet(prologix_base):
         return self.readall()
 
 
-class prologix_USB(prologix_base):
+class prologix_USB(_prologix_base):
     """
     Interface to a prologix usb-gpib controller.
 
@@ -171,10 +207,13 @@ class instrument(object):
     >>> plx = prologix_USB()
     >>> inst = instrument(plx, 12)
 
-    Then use the ask() and write() methods to
-    send gpib queries and commands.
+    Then use the :meth:`ask` and :meth:`write` methods to
+    send GPIB queries and commands.
 
     """
+
+    delay = 0.1
+    """Seconds to pause after each write."""
 
     def __init__(self, controller, addr,
                  delay=0.1, auto=True):
@@ -197,7 +236,7 @@ class instrument(object):
         self.delay = delay
         self.controller = controller
 
-    def get_priority(self):
+    def _get_priority(self):
         """
         configure the controller to address this instrument
 
@@ -211,7 +250,24 @@ class instrument(object):
             self.controller.addr = self.addr
 
     def ask(self, command):
-        """ query the instrument.  """
+        """
+        Send a query the instrument, then read its response. 
+
+        Equivalent to :meth:`write` then :meth:`read`.
+
+        For example, get the 'ID' string from an EG&G model
+        5110 lock-in:
+
+        >>> inst.ask('ID')
+        '5110'
+
+        Is the same as:
+
+        >>> inst.write('ID?')
+        >>> inst.read()
+        '5110'
+
+        """
         # clear stray bytes from the buffer.
         # hopefully, there will be none.
         # if there are, print a warning
@@ -223,14 +279,21 @@ class instrument(object):
         return self.read()
 
     def read(self): # behaves like readall
-        """ read response from instrument.  """
-        self.get_priority()
+        """
+        Read a response from an instrument.
+
+        """
+        self._get_priority()
         if not self.auto:
             # explicitly tell instrument to talk.
             self.controller.write('++read eoi', lag=self.delay)
         return self.controller.readall()
 
     def write(self, command):
-        self.get_priority()
+        """
+        Write a command to the instrument.
+
+        """
+        self._get_priority()
         self.controller.write(command, lag=self.delay)
 

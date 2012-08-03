@@ -14,7 +14,7 @@ class srs830(object):
 
     >>> li = srs830(plx.instrument(8))
 
-    where plx is a prologix controller.
+    where ``plx`` is a prologix controller.
     pyVISA instruments should also work fine.
 
     So far, this class only implements the ADC functionality.
@@ -74,7 +74,7 @@ class egg5110(object):
 
     >>> li = egg5110(plx.instrument(12))
 
-    where plx is a prologix controller.
+    where ``plx`` is a prologix controller.
     pyVISA instruments should also work fine.
 
     """
@@ -112,11 +112,17 @@ class egg5110(object):
                      21: (1,'V')}
     
     def get_sensitivity(self):
+        """Get the current sensitivity (as a 2-tuple)."""
         val = self.bus.ask("SEN")
         return self.sensitivities[int(val)]
     def set_sensitivity(self,code):
+        """Set the current sensitivity (Using a code)."""
         self.bus.write("SEN %d" % code)
     sensitivity = property(get_sensitivity,set_sensitivity)
+    """
+    Current value of the sensitivity as a 2-tuple.
+
+    """
 
     # time constant functions
 
@@ -135,11 +141,17 @@ class egg5110(object):
                   12: (300,'s')}
 
     def get_timeconst(self):
+        """Get the current time constant (as a 2-tuple)."""
         val = self.bus.ask("TC")
         return self.timeconsts[int(val)]
     def set_timeconst(self,code):
+        """Set the current time constant (Using a code)."""
         self.bus.write("TC %d" % code)
     timeconst = property(get_timeconst,set_timeconst)
+    """
+    Current value of the time constant as a 2-tuple.
+
+    """
 
     # measurement functions
 
@@ -168,29 +180,37 @@ class egg5110(object):
             return fraction * sens, unit
 
     def get_x(self):
+        """ Get current value of X. """
         return self.measure('X')
     x = property(get_x)
+    """Current value of X. """
 
     def get_y(self):
+        """ Get current value of Y. """
         return self.measure('Y')
     y = property(get_y)
+    """Current value of Y. """
 
     def get_r(self):
+        """ Get current value of R. """
         return self.measure('MAG')
     r = property(get_r)
+    """Current value of R. """
 
     def get_phase(self):
+        """ Get current value of the phase. """
         # phase measurements come in millidegrees
         # so convert them to degrees
         multiplier = float(1) / 1000
         response = self.bus.ask('PHA')
         return int(response) * mulitplier, 'degrees'
     phase = property(get_phase)
+    """Current value of the phase. """
 
     # adc function
 
     def get_ADC(self,n):
-        # read one of the four ADC ports
+        """Read one of the four ADC ports."""
         if n not in range(1,4):
             raise InstrumentError("Indicate ADC between 1 and 4")
         response = self.bus.ask("ADC %d" % n)
@@ -206,6 +226,7 @@ class egg5110(object):
 
     @property
     def lights(self):
+        """ Boolean. Turns the front panel lights on or off. """
         response = self.bus.ask("LTS")
         return bool(int(response))
 

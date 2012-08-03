@@ -9,6 +9,7 @@ Prologix controllers with :mod:`wanglib.prologix`
 
 .. automodule:: wanglib.prologix
     :members:
+    :inherited-members:
     :undoc-members:
 
 linux_gpib compatibility layer: :mod:`wanglib.linux_gpib`
