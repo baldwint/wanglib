@@ -190,7 +190,7 @@ class prologix_USB(_prologix_base):
 
     def ask(self, query, *args, **kwargs):
         """ Write to the bus, then read response. """
-        self.bus.log_something('note', 'clearing buffer - expect no result')
+        self.bus.logger.debug('clearing buffer - expect no result')
         self.readall()  # clear the buffer
         self.write(query, *args, **kwargs)
         return self.readall()

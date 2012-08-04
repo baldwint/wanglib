@@ -203,7 +203,7 @@ class egg5110(object):
         # so convert them to degrees
         multiplier = float(1) / 1000
         response = self.bus.ask('PHA')
-        return int(response) * mulitplier, 'degrees'
+        return int(response) * multiplier, 'degrees'
     phase = property(get_phase)
     """Current value of the phase. """
 
