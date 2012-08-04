@@ -212,11 +212,12 @@ def gaussian(p, x):
     """
     gaussian function.
 
-    p is a 4-component parameter vector defining:
-        0 : a baseline offset
-        1 : the area between curve and baseline
-        2 : the location of the maximum
-        3 : the standard deviation
+    p is a 4-component parameter vector defining::
+
+        0 -- a baseline offset
+        1 -- the area between curve and baseline
+        2 -- the location of the maximum
+        3 -- the standard deviation
 
     """
     
@@ -231,11 +232,11 @@ def monitor(function, interval = 0.3, absolute = False):
     """
     periodically yield output of a function, along with timestamp
 
-    Arguments:
-        function - function to call
-        interval - how often to call it (default 0.3 seconds)
-        absolute - if True, yielded x values are seconds since epoch.
-                   otherwise, time since first yield.
+    :param function: function to call
+    :param interval: how often to call it (default 0.3 seconds)
+    :param absolute: if True, yielded x values are seconds since
+                     epoch. otherwise, time since first yield.
+
     """
     start = 0 if absolute else time()
     while True:
@@ -246,15 +247,14 @@ def scanner(xvals, set, get, lag = 0.3):
     """
     generic scan generator. (spectra, delay scans, whatever).
 
-    Arguments:
-        xvals - values of x over which to scan.
-        set - attribute to set on each step, given as a 
-                (object, attribute_name) tuple 
-                or a function taking value as argument
-        get - attribute to measure on each step, given as a 
-                (object, attribute_name) tuple 
-                or a function returning measurement value
-        lag - seconds to sleep between setting and measuring
+    :param xvals: values of x over which to scan.
+    :param set: attribute to set on each step, given as a
+                (object, attribute_name) tuple or a function
+                taking value as argument
+    :param get: attribute to measure on each step, given as a
+                (object, attribute_name) tuple or a function
+                returning measurement value
+    :param lag: seconds to sleep between setting and measuring
 
     Example: while scanning triax wavelength, measure lockin x
 
