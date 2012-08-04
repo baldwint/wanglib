@@ -1,7 +1,28 @@
 #!/usr/bin/env python
 
 """
-Interfaces to lock-in amplifiers.
+Lock-in amplifiers are commonly used for sensitive detection of a
+modulated voltage signal. They enable us to measure both the amplitude
+and phase of a signal, which we can access in either the cartesian (X,
+Y) or polar (R, phase) basis.
+
+This module provides interfaces to two brands of lock-in, using two
+corresponding classes.
+
+    :EG&G 5110:      :class:`wanglib.instruments.lockins.egg5110`
+    :SRS 830:        :class:`wanglib.instruments.lockins.srs830`
+
+.. note::
+
+    The methods implemented by these two classes are named the same, but
+    currently, they behave very differently. For example, the EG&G 5110
+    returns measurements as a percentage of the sensitivity, but the SRS
+    830 always returns a figure in Volts.
+
+.. warning::
+    I'm planning on standardizing the return value formats in a future
+    version. This will make it easier to switch between lock-ins, but
+    will break existing code!
 
 """
 
@@ -16,8 +37,6 @@ class srs830(object):
 
     where ``plx`` is a prologix controller.
     pyVISA instruments should also work fine.
-
-    So far, this class only implements the ADC functionality.
 
     """
 

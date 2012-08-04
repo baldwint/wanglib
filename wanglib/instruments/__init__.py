@@ -8,16 +8,20 @@
 Class-based interfaces to various scientific instruments.
 
 These interfaces are designed to complement the low-level instrument
-talking already provided by pySerial (for RS232) and pyVISA (for
-GPIB). Each instrument object defined here wraps a serial.Serial or
-visa.instrument instance and uses its write/read/ask methods to
-accomplish common commands and readings specific to that instrument.
+talking already provided by PySerial_ (for RS232) and PyVISA_
+(for GPIB). Each instrument object defined here wraps a
+:class:`serial.Serial` or :class:`visa.instrument` instance and uses
+its ``write``/``read``/``ask`` methods to accomplish common commands
+and readings specific to that instrument.
+
+.. _PySerial: http://pyserial.sourceforge.net/
+.. _PyVISA: http://pyvisa.sourceforge.net/
 
 Example usage
 +++++++++++++
 
 Here's an example. We want to talk to an Agilent model 8648 RF signal
-generator using GPIB. We have pyVISA installed, and that makes GPIB
+generator using GPIB. We have PyVISA installed, and that makes GPIB
 talking a snap:
 
 >>> from visa import instrument
@@ -69,16 +73,16 @@ any object, attribute, or method.
 
 If the ag8648 class doesn't have an attribute or method for a given
 instrument function, you can still send raw GPIB queries by accessing
-the original pyVISA object as a sub-object of the ag8648 instance.
+the original PyVISA object as a sub-object of the ag8648 instance.
 
 >>> rf.bus.ask("FREQ:CW?")
 '110000000'
 
-In this example, we wrapped a pyVISA instrument, but that's not required.
+In this example, we wrapped a PyVISA instrument, but that's not required.
 The low-level instrument we started with can be anything that has similar
 read(), write(), and ask() methods:
 
-    :pyVISA:        visa.instrument
+    :PyVISA:        visa.instrument
     :linux-gpib:    wanglib.linux_gpib.Gpib
     :prologix:      wanglib.prologix.instrument
 

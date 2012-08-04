@@ -1,13 +1,33 @@
 """
-This module provides drivers for Prologix GPIB controllers.
+This module enables you to control various instruments over GPIB using
+low-cost `Prologix controllers`_. The interface aims to emulate that
+of PyVISA_, such that :class:`wanglib.prologix.instrument` objects
+can be a drop-in replacement for :class:`visa.instrument`.
 
-Both USB and Ethernet controllers are supported. 
-:class:`prologix_ethernet` and :class:`prologix_USB`
-represent two kinds of prologix controllers.
+.. _`Prologix controllers`: http://prologix.biz/
+.. _PyVISA: http://pyvisa.sourceforge.net/
 
-:class:`instrument` objects encapsulate an attached
-instrument, and are designed to be a mostly drop-in
-replacement for the :class:`visa.instrument` object.
+For example, the canonical PyVISA three-liner
+
+>>> import visa
+>>> keithley = visa.instrument("GPIB::12")
+>>> print keithley.ask("*IDN?")
+
+is just one line longer with :mod:`wanglib.prologix`:
+
+>>> from wanglib import prologix
+>>> plx = prologix.prologix_USB('/dev/ttyUSBgpib')
+>>> keithley = plx.instrument(12)
+>>> print keithley.ask("*IDN?")
+
+This extra verbosity is necessary to specify which GPIB controller to
+use. Here we are using a Prologix GPIB-USB controller at
+``/dev/ttyUSBgpib``. If we later switch to using a Prologix
+GPIB-Ethernet controller, we would instead use
+
+>>> plx = prologix.prologix_ethernet('128.223.131.156')
+
+for our ``plx`` controller object.
 
 """
 
@@ -17,7 +37,7 @@ from time import sleep
 
 class _prologix_base(object):
     """
-    Base class for prologix controllers (ethernet/usb)
+    Base class for Prologix controllers (ethernet/usb)
 
     """
 
@@ -38,7 +58,7 @@ class _prologix_base(object):
     @property
     def addr(self):
         """
-        The prologix controller can calk to one instrument
+        The Prologix controller can calk to one instrument
         at a time. This sets the GPIB address of the
         currently addressed instrument.
 
@@ -71,7 +91,7 @@ class _prologix_base(object):
         """
         Boolean. Read-after-write setting.
 
-        The prologix 'read-after-write' setting can
+        The Prologix 'read-after-write' setting can
         automatically address instruments to talk after
         writing to them. This is usually convenient, but
         some instruments do poorly with it.
@@ -85,7 +105,7 @@ class _prologix_base(object):
         self.write("++auto %d" % self._auto)
 
     def version(self):
-        """ Query the Prologix firmware version. """
+        """ Check the Prologix firmware version. """
         return self.ask("++ver")
 
     @property
@@ -95,8 +115,10 @@ class _prologix_base(object):
         settings in EEPROM.
 
         It is usually best to turn this off, since it will
-        reduce wear on the EEPROM in applications that
+        reduce `wear on the EEPROM`_ in applications that
         involve talking to more than one instrument.
+
+        .. _`wear on the EEPROM`: http://www.febo.com/pipermail/time-nuts/2009-July/038952.html
 
         """
         resp = self.ask("++savecfg")
@@ -129,7 +151,11 @@ class _prologix_base(object):
 
 class prologix_ethernet(_prologix_base):
     """
-    Interface to a prologix gpib-ethernet controller.
+    Interface to a Prologix GPIB-Ethernet controller.
+
+    To instantiate, specify the IP address of the controller:
+
+    >>> plx = prologix.prologix_ethernet('128.223.131.156')
 
     """
 
@@ -162,7 +188,16 @@ class prologix_ethernet(_prologix_base):
 
 class prologix_USB(_prologix_base):
     """
-    Interface to a prologix usb-gpib controller.
+    Interface to a Prologix GPIB-USB controller.
+
+    To instantiate, specify the virtual serial port where the
+    controller is plugged in:
+
+    >>> plx = prologix.prologix_USB('/dev/ttyUSBgpib')
+
+    On Windows, you could use something like
+
+    >>> plx = prologix.prologix_USB('COM1')
 
     """
 
@@ -190,6 +225,7 @@ class prologix_USB(_prologix_base):
 
     def ask(self, query, *args, **kwargs):
         """ Write to the bus, then read response. """
+        #TODO: if bus doesn't have a logger
         self.bus.logger.debug('clearing buffer - expect no result')
         self.readall()  # clear the buffer
         self.write(query, *args, **kwargs)
@@ -207,8 +243,14 @@ class instrument(object):
     >>> plx = prologix_USB()
     >>> inst = instrument(plx, 12)
 
-    Then use the :meth:`ask` and :meth:`write` methods to
-    send GPIB queries and commands.
+    A somewhat nicer way to do the second step would be to use the
+    :meth:`instrument` factory method of the Prologix controller:
+
+    >>> inst = plx.instrument(12)
+
+    Once we have our instrument object ``inst``, we can use the
+    :meth:`ask` and :meth:`write` methods to send GPIB queries and
+    commands.
 
     """
 
@@ -251,7 +293,7 @@ class instrument(object):
 
     def ask(self, command):
         """
-        Send a query the instrument, then read its response. 
+        Send a query the instrument, then read its response.
 
         Equivalent to :meth:`write` then :meth:`read`.
 
