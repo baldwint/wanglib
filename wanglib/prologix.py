@@ -2,7 +2,7 @@
 This module enables you to control various instruments over GPIB using
 low-cost `Prologix controllers`_. The interface aims to emulate that
 of PyVISA_, such that :class:`wanglib.prologix.instrument` objects
-can be a drop-in replacement for :class:`visa.instrument`.
+can be a drop-in replacement for :func:`visa.instrument`.
 
 .. _`Prologix controllers`: http://prologix.biz/
 .. _PyVISA: http://pyvisa.sourceforge.net/

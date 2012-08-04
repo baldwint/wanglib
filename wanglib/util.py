@@ -27,7 +27,14 @@ def show_newlines(string):
 if ser_avail:
     class Serial(serial.Serial):
         """
-        Extension of the standard serial class.
+        Extension of PySerial_'s :class:`serial.Serial` class that
+        implements a few extra features:
+
+        .. _PySerial: http://pyserial.sourceforge.net/
+
+            - an :meth:`ask` method
+            - a :meth:`readall` method
+            - in/out logging.
         
         to log whatever's written or read, pass a filename into
         the 'log' kwarg.
