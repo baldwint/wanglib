@@ -40,7 +40,7 @@ the delay in picoseconds, etc.
 from wanglib.util import num, InstrumentError
 from time import sleep
 
-class newport_stage(object):
+class _newport_stage(object):
     """
     Base class for newport stage controllers.
 
@@ -130,7 +130,7 @@ class newport_stage(object):
         self.move(self._one_mm)
         self.define_home()
 
-class ESP300_stage(newport_stage):
+class ESP300_stage(_newport_stage):
     r"""
     A single stage controlled by the ESP300.
 
@@ -258,7 +258,7 @@ class ESP300_stage(newport_stage):
         resp = self.bus.ask(self.cmd("SN%d" % key))
 
 
-class MM3000_stage(newport_stage):
+class MM3000_stage(_newport_stage):
     """
     A single stage controlled by the Newport MM3000 motion controller.
 
@@ -325,17 +325,17 @@ class MM3000_stage(newport_stage):
 # the motion controllers. Now for some useful classes which
 # are specific to individual delay stages.
 
-class delay_stage(newport_stage):
+class delay_stage(_newport_stage):
     """
     Mixin class for stages used primarily to delay pulses.
 
     Defines one extra feature: the 't' attribute, which 
     is basically the position of the stage in picosecond units.
     
-    When mixing in, you need to define two extra parameters:
-        stage_length -- length of the stage, in
-                        its natural length units.
-        c -- speed of light, in natural length units per picosecond.
+    When mixing in, you need to define two extra attributes:
+        :stage_length: length of the stage, in
+                       its natural length units.
+        :c: speed of light, in natural length units per picosecond.
 
     Important: make sure to call 'find_zero' on the stage before
     using t to control motion. Otherwise you might run out of range.
