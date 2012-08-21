@@ -54,6 +54,7 @@ This creates an editable clone of the repository in your home directory at
 directory and do::
 
     $ hg pull
+    $ hg update
 
 You can make changes to wanglib by editing the files in this folder.
 By making changes, you are creating a branch. If you wish to contribute
