@@ -228,14 +228,19 @@ def gaussian(p, x):
 # density plot was previously defined here
 from wanglib.pylab_extensions import density_plot
 
-def monitor(function, interval = 0.3, absolute = False):
+def monitor(function, lag = 0.3, absolute = False):
     """
-    periodically yield output of a function, along with timestamp
+    Periodically yield output of a function, along with timestamp.
+    Compatible with :func:`wanglib.pylab_extensions.live_plot.plotgen`.
 
     :param function: function to call
-    :param interval: how often to call it (default 0.3 seconds)
+    :type function: function
+    :param lag: interval between calls to ``function`` (default 0.3 seconds)
+    :type lag: float
     :param absolute: if True, yielded x values are seconds since
                      epoch. otherwise, time since first yield.
+    :type absolute: boolean
+    :returns:   a generator object yielding t,y pairs.
 
     """
     start = 0 if absolute else time()
@@ -245,16 +250,22 @@ def monitor(function, interval = 0.3, absolute = False):
 
 def scanner(xvals, set, get, lag = 0.3):
     """
-    generic scan generator. (spectra, delay scans, whatever).
+    Generic scan generator - useful for spectra, delay scans, whatever.
+    Compatible with :func:`wanglib.pylab_extensions.live_plot.plotgen`.
 
     :param xvals: values of x over which to scan.
-    :param set: attribute to set on each step, given as a
-                (object, attribute_name) tuple or a function
-                taking value as argument
-    :param get: attribute to measure on each step, given as a
-                (object, attribute_name) tuple or a function
-                returning measurement value
+    :type xvals: iterable
+    :param set: Function to call on each step that advances the independent
+                variable to the next value of ``xvals``. This function should
+                take that value as an argument.
+    :type set: function
+    :param get: Function to call on each step that performs the measurement.
+                The return value of this function should be the measurement
+                result.
+    :type get: function
     :param lag: seconds to sleep between setting and measuring
+    :type lag: float
+    :returns:   a generator object yielding x,y pairs.
 
     Example: while scanning triax wavelength, measure lockin x
 
@@ -264,10 +275,17 @@ def scanner(xvals, set, get, lag = 0.3):
     >>> tr = triax320()
     >>> li = egg5110(instrument(plx,12))
     >>> wls = arange(770, 774, .1)
-    >>> gen = scanner(wls, set=(tr,'wl'), get=(li,'x'), **kwargs)
-    >>> # OR, a little nicer:
-    >>> gen = scanner(wls, tr.set_wl, li.get_x, **kwargs)
+    >>> gen = scanner(wls, tr.set_wl, li.get_x)
     >>> result = plotgen(gen)
+
+    Sometimes we will want to set/measure an attribute of an object on each
+    step, instead of calling a method. In this case, we can provide an
+    (object, attribute_name) tuple in lieu of a function for ``set`` or ``get``.
+    For example, in place of the ``gen`` used above, we could do:
+
+    >>> gen = scanner(wls, set=(tr,'wl'), get=(li,'x'))
+
+    Avoid this if you can, though.
     
     """
     for X in xvals:
