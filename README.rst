@@ -60,3 +60,22 @@ By making changes, you are creating a branch. If you wish to contribute
 your changes back to me, create a repo for your branch on Bitbucket, and
 open a pull request.
 
+Package Contents
+----------------
+
+The core contains these modules:
+
+* :mod:`wanglib.util` -- miscellaneous utilities
+    - implements a custom serial interface
+    - provides templates for fitting, calibration, and scan automation.
+* :mod:`wanglib.prologix` -- drivers for prologix GPIB controllers (USB and Ethernet)
+* :mod:`wanglib.linux_gpib` -- provides compatibility with systems using linux_gpib
+* :mod:`wanglib.ccd` --  a client for the CCD on the spex750m
+* :mod:`wanglib.grating` -- generates phase gratings for the SLM
+
+more functionality in two sub-packages:
+
+* :mod:`wanglib.instruments` -- libraries for individual instruments in the lab
+* :mod:`wanglib.pylab_extensions` -- misc. extensions to the pylab plotting interface
+
+
