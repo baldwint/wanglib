@@ -246,7 +246,7 @@ def monitor(function, lag = 0.3, absolute = False):
     start = 0 if absolute else time()
     while True:
         yield time() - start, function()
-        sleep(interval)
+        sleep(lag)
 
 def scanner(xvals, set, get, lag = 0.3):
     """
