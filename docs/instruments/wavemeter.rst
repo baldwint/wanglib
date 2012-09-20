@@ -1,7 +1,7 @@
-Burleigh Wavemeter: :mod:`wanglib.instruments.stages`
-+++++++++++++++++++++++++++++++++++++++++++++++++++++
+Burleigh Wavemeter: :mod:`wanglib.instruments.wavemeter`
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-.. automodule:: wanglib.instruments.stages
+.. automodule:: wanglib.instruments.wavemeter
     :members:
     :undoc-members:
 
