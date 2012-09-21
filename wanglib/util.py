@@ -114,6 +114,8 @@ if ser_avail:
 # will go a long way in reducing complexity.
 # ------------------------------------------------------
 
+from numpy import log10, floor
+
 def num(string):
     """
     convert string to number. decide whether to convert to int or float.
@@ -123,6 +125,16 @@ def num(string):
     else:
         return float(string)
 
+def sciround(number, sigfigs=1):
+    """
+    Round a number to a desired significant figure precision.
+
+    >>> sciround(.000671438, 3)
+    .000671
+
+    """
+    exponent = floor(log10(number))
+    return round(number, -int(exponent) + (sigfigs - 1))
 
 from scipy.optimize import leastsq
 import csv
