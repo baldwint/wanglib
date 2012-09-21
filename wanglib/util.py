@@ -34,11 +34,20 @@ if ser_avail:
 
             - an :meth:`ask` method
             - a :meth:`readall` method
+            - auto-appended termination characters
             - in/out logging.
         
-        to log whatever's written or read, pass a filename into
-        the 'log' kwarg.
+        To log whatever's written or read to a serial port,
+        pass a filename into the ``log`` kwarg:
 
+        >>> port = Serial('/dev/ttyS0', log='wtf.log')
+
+        To automatically append a newline to each command, specify
+        ``term_chars``:
+
+        >>> port.term_chars = '/n'
+
+        This can also be supplied as a keyword argument.
 
         """
 
