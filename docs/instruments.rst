@@ -15,6 +15,7 @@ Supported instruments
     instruments/signal_generators.rst
     instruments/lasers.rst
     instruments/wavemeter.rst
+    instruments/tektronix.rst
 
 
 
