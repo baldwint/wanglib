@@ -4,7 +4,7 @@ Interfaces to Tektronix oscilloscopes.
 
 """
 
-from wanglib.util import InstrumentError
+from wanglib.util import InstrumentError, sciround
 
 class TDS3000(object):
     """ A Tektronix oscilloscope from the TDS3000 series.
@@ -54,6 +54,7 @@ class TDS3000(object):
         4ns, depending on model, in a 1-2-4 sequence.
 
         """
+        to = sciround(to, 1)
         if to in self._acceptable_timedivs:
             self.bus.write('HOR:MAI:SCA %.0E' % to)
         else:
