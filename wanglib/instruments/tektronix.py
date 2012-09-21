@@ -5,6 +5,7 @@ Interfaces to Tektronix oscilloscopes.
 """
 
 from wanglib.util import InstrumentError, sciround
+import numpy
 
 class TDS3000(object):
     """ A Tektronix oscilloscope from the TDS3000 series.
@@ -22,15 +23,54 @@ class TDS3000(object):
 
     """
 
+    class _Wfmpre(dict):
+        """ Waveform formatting parameters, as a dictionary. """
+
+        def __init__(self, bus):
+            self.bus = bus
+
+        def __getitem__(self, key):
+            result = self.bus.ask('WFMP:%s?' % key).rstrip()
+            return result
+
     def __init__(self, bus=None):
         if bus is None:
             from wanglib.util import Serial
             bus = Serial('/dev/ttyS0', rtscts=True, term_chars='\n')
         self.bus = bus
+        self.wfmpre = self._Wfmpre(bus)
+
+    def get_curve(self):
+        """
+        Fetch a trace.
+
+        :returns: A numpy array representing the current waveform.
+
+        """
+        self.bus.readall()
+        self.bus.write('CURV?')
+        result = self.bus.read() # reads either everything (GPIB)
+                                 # or a single byte (RS-232)
+        if result == '#':
+            meta_len = int(self.bus.read(1))
+            data_len = int(self.bus.read(meta_len))
+            result = self.bus.read(data_len)
+            self.bus.read(1) # read final newline
+        elif len(result) == 1:
+            # if we received something other than a pound sign
+            raise InstrumentError('Unknown first byte: %s' % result)
+
+        fmt = '>' if self.wfmpre['BYT_OR'] == 'MSB' else '<'
+        fmt += 'i' if self.wfmpre['BN_FMT'] == 'RI' else 'u'
+        fmt += self.wfmpre['BYT_NR']
+
+        return numpy.fromstring(result, dtype = fmt)
 
     def get_timediv(self):
         """
         Get time per division, in seconds.
+
+        :returns: Seconds per division, as a floating-point number.
         """
         result = self.bus.ask('HOR:MAI:SCA?')
         return float(result.rstrip())
@@ -50,8 +90,10 @@ class TDS3000(object):
         """
         Set time per division, in seconds.
 
-        Time divisions range from 10 seconds to 1, 2, or
-        4ns, depending on model, in a 1-2-4 sequence.
+        :param to:  Desired seconds per division.
+                    Acceptable values range from 10 seconds to 1, 2, or
+                    4ns, depending on model, in a 1-2-4 sequence.
+        :type to:   float
 
         """
         to = sciround(to, 1)
