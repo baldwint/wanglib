@@ -27,15 +27,22 @@ class TDS3000(object):
     class _Wfmpre(dict):
         """ Waveform formatting parameters, as a dictionary. """
 
+        strs = ('ENCDG', 'BN_FMT', 'BYT_OR', 'XUNIT', 'YUNIT')
+        floats = ('XZERO', 'XINCR', 'YOFF', 'YZERO', 'YMULT')
+        ints = ('BYT_NR', 'BIT_NR', 'NR_PT', 'PT_OFF')
+
         def __init__(self, bus):
             self.bus = bus
+
+        def keys(self):
+            return list(self.strs + self.floats + self.ints)
 
         def __getitem__(self, key):
             key = key.upper()
             result = self.bus.ask('WFMP:%s?' % key).rstrip()
-            if key in ('XZERO', 'XINCR', 'YOFF', 'YZERO', 'YMULT'):
+            if key in self.floats:
                 return float(result)
-            if key in ('NR_PT',):
+            if key in self.ints:
                 return int(result)
             else:
                 return result
@@ -129,4 +136,4 @@ class TDS3000(object):
 
 if __name__ == "__main__":
     scope = TDS3000()
-    
+
