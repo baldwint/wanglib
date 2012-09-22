@@ -3,6 +3,7 @@
 from time import sleep, time, ctime
 from numpy import array
 from numpy import exp, sqrt, pi
+import numpy
 import logging
 
 class InstrumentError(Exception):
@@ -246,9 +247,6 @@ def gaussian(p, x):
     exp(-((x - p[2])**2)/(2 * p[3]**2)) * \
     p[1]  /  (sqrt(2 * pi) * p[3])
 
-# density plot was previously defined here
-from wanglib.pylab_extensions import density_plot
-
 def monitor(function, lag = 0.3, absolute = False):
     """
     Periodically yield output of a function, along with timestamp.
@@ -321,6 +319,61 @@ def scanner(xvals, set, get, lag = 0.3):
             Y = get[0].__getattribute__(get[1])
         yield X,Y
 
+def save(fname, array):
+    """
+    Save a Numpy array to file.
+
+    :param fname: Filename, as a string
+    :param array: Numpy array to save.
+
+    Unlike :meth:`numpy.save`, this function will raise ValueError if
+    overwriting an existing file.
+
+    """
+    if not fname.endswith('.npy'):
+        # append file extension.
+        fname = fname + '.npy'
+        # usually the numpy function does this, but
+        # to guard against overwrites, we should do it ourselves.
+
+    try:
+        # test to see if the file exists
+        open(fname, 'r')
+    except IOError:
+        # if an error was raised, the filename is available
+        numpy.save(fname, array)
+    else:
+        # if the open statement succeeded, the filename is taken.
+        raise ValueError('file exists. choose a different name')
+
+class saver(object):
+    """
+    Sequential file saver.
+
+    after initializing :class:`saver` with the base filename, use the
+    :meth:`save` method to save arrays to sequentially-numbered files.
+
+    >>> s = saver('foo')
+    >>> s.save(arange(5)) # saves to 'foo000.npy'
+    >>> s.save(arange(2)) # saves to 'foo001.npy'
+
+    """
+
+    def __init__(self, name, verbose=False):
+        self.name = name
+        self.n = 0
+        self.verbose = verbose
+
+    def save(self, array):
+        """
+        Save an array to the next file in the sequence.
+
+        """
+        fname = "%s%03d.npy" % (self.name, self.n)
+        save(fname, array)
+        self.n +=1
+        if self.verbose:
+            print "saved as", fname
 
 
 if __name__ == "__main__":

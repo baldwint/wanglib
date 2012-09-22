@@ -3,6 +3,7 @@
 from pylab import gca, draw
 import numpy
 from time import sleep
+from wanglib.util import save
 
 def cll(index = -1):
     """
@@ -47,24 +48,15 @@ def sll(fname, index = -1, blink = True):
     line = gca().lines[index]
     x,y = line.get_data()
 
-    if not fname.endswith('.npy'):
-        # append file extension.
-        fname = fname + '.npy'
-        # usually the numpy function does this, but
-        # to guard against overwrites, we should do it ourselves.
-
-    try:
-        # test to see if the file exists
-        open(fname, 'r')
-    except IOError:
-        # if an error was raised, the filename is available
-        numpy.save(fname, (x,y))
-        if blink:
-            bll(index) # blink the line to indicate a successful save
+    if hasattr(fname, 'save'):
+        # for sequential savers, use save method
+        fname.save((x,y))
     else:
-        # if the open statement succeeded, the filename is taken.
-        raise ValueError('file exists. choose a different name')
-
+        # fname is a string, use save function from wanglib.util
+        save(fname, (x,y))
+    # Either of the above should raise ValueError if of overwriting
+    if blink:
+        bll(index) # blink the line to indicate a successful save
 
 # some line-editing functions
 
