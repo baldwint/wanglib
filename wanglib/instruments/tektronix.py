@@ -20,6 +20,7 @@ class TDS3000(object):
 
     If using RS-232 (as above), be sure to use rtscts, and
     connect using a null modem cable.
+    You will probably need to use the highest baud rate you can.
 
     """
 
@@ -30,13 +31,20 @@ class TDS3000(object):
             self.bus = bus
 
         def __getitem__(self, key):
+            key = key.upper()
             result = self.bus.ask('WFMP:%s?' % key).rstrip()
-            return result
+            if key in ('XZERO', 'XINCR', 'YOFF', 'YZERO', 'YMULT'):
+                return float(result)
+            if key in ('NR_PT',):
+                return int(result)
+            else:
+                return result
 
     def __init__(self, bus=None):
         if bus is None:
             from wanglib.util import Serial
-            bus = Serial('/dev/ttyS0', rtscts=True, term_chars='\n')
+            bus = Serial('/dev/ttyS0', baudrate=19200,
+                         rtscts=True, term_chars='\n')
         self.bus = bus
         self.wfmpre = self._Wfmpre(bus)
 
@@ -47,7 +55,10 @@ class TDS3000(object):
         :returns: A numpy array representing the current waveform.
 
         """
-        self.bus.readall()
+        fmt = '>' if self.wfmpre['BYT_OR'] == 'MSB' else '<'
+        fmt += 'i' if self.wfmpre['BN_FMT'] == 'RI' else 'u'
+        fmt += str(self.wfmpre['BYT_NR'])
+
         self.bus.write('CURV?')
         result = self.bus.read() # reads either everything (GPIB)
                                  # or a single byte (RS-232)
@@ -60,11 +71,20 @@ class TDS3000(object):
             # if we received something other than a pound sign
             raise InstrumentError('Unknown first byte: %s' % result)
 
-        fmt = '>' if self.wfmpre['BYT_OR'] == 'MSB' else '<'
-        fmt += 'i' if self.wfmpre['BN_FMT'] == 'RI' else 'u'
-        fmt += self.wfmpre['BYT_NR']
-
         return numpy.fromstring(result, dtype = fmt)
+
+    def get_wfm(self):
+        """
+        Fetch a trace, scaled to actual units.
+
+        :returns: Two numpy arrays: `t` and `y`
+
+        """
+        y = ((self.get_curve().astype(float) - self.wfmpre['YOFF'])
+             * self.wfmpre['YMULT']) + self.wfmpre['YZERO']
+        t = (numpy.arange(self.wfmpre['NR_PT'], dtype=float)
+             * self.wfmpre['XINCR']) + self.wfmpre['XZERO']
+        return t, y
 
     def get_timediv(self):
         """
