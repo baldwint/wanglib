@@ -24,28 +24,46 @@ class TDS3000(object):
 
     """
 
-    class _Wfmpre(dict):
-        """ Waveform formatting parameters, as a dictionary. """
+    class _parameterset(dict):
+        """ A set of single-value commands, as a dictionary. """
 
-        strs = ('ENCDG', 'BN_FMT', 'BYT_OR', 'XUNIT', 'YUNIT')
-        floats = ('XZERO', 'XINCR', 'YOFF', 'YZERO', 'YMULT')
-        ints = ('BYT_NR', 'BIT_NR', 'NR_PT', 'PT_OFF')
-
-        def __init__(self, bus):
+        def __init__(self, bus, prefix='',
+                    strs = (), floats = (),
+                     ints = (), bools = ()):
             self.bus = bus
+            self.prefix = prefix
+            self.strs = strs
+            self.floats = floats
+            self.ints = ints
+            self.bools = bools
 
         def keys(self):
-            return list(self.strs + self.floats + self.ints)
+            return list(self.strs + self.floats +
+                        self.ints + self.bools)
 
         def __getitem__(self, key):
             key = key.upper()
-            result = self.bus.ask('WFMP:%s?' % key).rstrip()
-            if key in self.floats:
-                return float(result)
-            if key in self.ints:
-                return int(result)
-            else:
+            result = self.bus.ask(
+                '%s%s?' % (self.prefix, key)).rstrip()
+            if key in self.strs:
                 return result
+            elif key in self.floats:
+                return float(result)
+            elif key in self.ints:
+                return int(result)
+            elif key in self.bools:
+                return bool(int(result))
+            else:
+                raise NotImplementedError
+
+        def __setitem__(self, key, value):
+            key = key.upper()
+            if key in self.strs:
+                self.bus.write('%s%s %s' % (self.prefix, key, value))
+            elif key in self.bools + self.ints:
+                self.bus.write('%s%s %d' % (self.prefix, key, int(value)))
+            else:
+                raise NotImplementedError
 
     def __init__(self, bus=None):
         if bus is None:
@@ -53,7 +71,42 @@ class TDS3000(object):
             bus = Serial('/dev/ttyS0', baudrate=19200,
                          rtscts=True, term_chars='\n')
         self.bus = bus
-        self.wfmpre = self._Wfmpre(bus)
+        self.wfmpre = self._parameterset(bus, prefix='WFMP:',
+            strs = ('ENCDG', 'BN_FMT', 'BYT_OR', 'XUNIT', 'YUNIT'),
+            floats = ('XZERO', 'XINCR', 'YOFF', 'YZERO', 'YMULT'),
+            ints = ('BYT_NR', 'BIT_NR', 'NR_PT', 'PT_OFF'))
+        self.acquire = self._parameterset(bus, prefix = 'ACQ:',
+            strs = ('MODE', 'STOPA'),
+            ints = ('NUMAVG', 'NUMENV'),
+            bools = ('STATE'))
+
+    acquire = dict()
+    """
+    Dictionary of acquisition parameters.
+
+    :param MODE:   one of ``SAMple``, ``PEAKdetect``,
+                          ``AVErage``, or ``ENVelope``.
+    :type MODE:    string
+    :param STOPA:  controls whether we are in "single sequence" mode - 
+                   that is, should data acquisition stop once the
+                   acquisition mode has been satisfied (``SEQuence``),
+                   or should it strictly be stopped and started by the
+                   RUN/STOP button on the front panel (``RUNSTop``)?
+    :type STOPA:   string
+    :param STATE:  is data currently being acquired?
+    :type STATE:   bool
+    :param NUMAVG: when ``STATE`` is ``AVErage``, how big should the
+                   basis be for the average?
+                   One of 2, 4, 8, 16, 32, 64, 128, 245, or 512.
+    :type NUMAVG:  int 
+    :param NUMENV: when ``STATE`` is ``ENVelope``, how big should the
+                   basis be for the envelope?
+                   One of 2, 4, 8, 16, 32, 64, 128, 245, 512, or 0
+                   (for infinite enveloping).
+    :type NUMENV:  int 
+
+    """
+    #TODO document wfmpre parameter set
 
     def get_curve(self):
         """
@@ -132,59 +185,6 @@ class TDS3000(object):
 
     timediv = property(get_timediv, set_timediv)
     """ Time per division, in seconds. """
-
-    def get_mode(self):
-        """
-        Query the acquisition mode.
-
-        :returns: One of SAMple, PEAKdetect, AVErage, or ENVelope.
-
-        """
-        return self.bus.ask('ACQ:MOD?').rstrip()
-
-    def set_mode(self, to):
-        """
-        Set the acquisition mode.
-
-        :param to: SAMple, PEAKdetect, AVErage, or ENVelope.
-        :type to:  str
-
-        """
-        self.bus.write('ACQ:MOD %s' % to)
-
-    mode = property(get_mode, set_mode)
-    """
-    Acquisition mode.
-
-    SAMple, PEAKdetect, AVErage, or ENVelope.
-
-    """
-
-    def get_state(self):
-        """
-        Query the acquisition state - are we currently collecting data?
-
-        :returns: True or False.
-
-        """
-        return bool(int(self.bus.ask('ACQ:STATE?').rstrip()))
-
-    def set_state(self, to):
-        """
-        Start or stop acquisition.
-
-        This is equivalent to hitting the Run/Stop button.
-
-        :param to: True to run, False to stop.
-
-        """
-        self.bus.write('ACQ:STATE %d' % bool(to))
-
-    acquire_state = property(set_state, get_state)
-
-
-
-
 
 if __name__ == "__main__":
     scope = TDS3000()
