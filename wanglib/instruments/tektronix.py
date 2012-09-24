@@ -133,6 +133,58 @@ class TDS3000(object):
     timediv = property(get_timediv, set_timediv)
     """ Time per division, in seconds. """
 
+    def get_mode(self):
+        """
+        Query the acquisition mode.
+
+        :returns: One of SAMple, PEAKdetect, AVErage, or ENVelope.
+
+        """
+        return self.bus.ask('ACQ:MOD?').rstrip()
+
+    def set_mode(self, to):
+        """
+        Set the acquisition mode.
+
+        :param to: SAMple, PEAKdetect, AVErage, or ENVelope.
+        :type to:  str
+
+        """
+        self.bus.write('ACQ:MOD %s' % to)
+
+    mode = property(get_mode, set_mode)
+    """
+    Acquisition mode.
+
+    SAMple, PEAKdetect, AVErage, or ENVelope.
+
+    """
+
+    def get_state(self):
+        """
+        Query the acquisition state - are we currently collecting data?
+
+        :returns: True or False.
+
+        """
+        return bool(int(self.bus.ask('ACQ:STATE?').rstrip()))
+
+    def set_state(self, to):
+        """
+        Start or stop acquisition.
+
+        This is equivalent to hitting the Run/Stop button.
+
+        :param to: True to run, False to stop.
+
+        """
+        self.bus.write('ACQ:STATE %d' % bool(to))
+
+    acquire_state = property(set_state, get_state)
+
+
+
+
 
 if __name__ == "__main__":
     scope = TDS3000()
