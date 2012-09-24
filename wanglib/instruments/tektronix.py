@@ -106,6 +106,13 @@ class TDS3000(object):
     :type NUMENV:  int
 
     """
+    def acquire_restart(self):
+        """
+        Discards collected data and restarts acquisition.
+
+        """
+        self.bus.write('ACQ:STATE RUN')
+
     #TODO document wfmpre parameter set
 
     def get_curve(self):
