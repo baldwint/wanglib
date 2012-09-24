@@ -87,7 +87,7 @@ class TDS3000(object):
     :param MODE:   one of ``SAMple``, ``PEAKdetect``,
                           ``AVErage``, or ``ENVelope``.
     :type MODE:    string
-    :param STOPA:  controls whether we are in "single sequence" mode - 
+    :param STOPA:  controls whether we are in "single sequence" mode -
                    that is, should data acquisition stop once the
                    acquisition mode has been satisfied (``SEQuence``),
                    or should it strictly be stopped and started by the
@@ -98,12 +98,12 @@ class TDS3000(object):
     :param NUMAVG: when ``STATE`` is ``AVErage``, how big should the
                    basis be for the average?
                    One of 2, 4, 8, 16, 32, 64, 128, 245, or 512.
-    :type NUMAVG:  int 
+    :type NUMAVG:  int
     :param NUMENV: when ``STATE`` is ``ENVelope``, how big should the
                    basis be for the envelope?
                    One of 2, 4, 8, 16, 32, 64, 128, 245, 512, or 0
                    (for infinite enveloping).
-    :type NUMENV:  int 
+    :type NUMENV:  int
 
     """
     #TODO document wfmpre parameter set
