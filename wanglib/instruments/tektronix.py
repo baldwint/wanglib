@@ -97,11 +97,11 @@ class TDS3000(object):
     :type STATE:   bool
     :param NUMAVG: when ``STATE`` is ``AVErage``, how big should the
                    basis be for the average?
-                   One of 2, 4, 8, 16, 32, 64, 128, 245, or 512.
+                   One of 2, 4, 8, 16, 32, 64, 128, 256, or 512.
     :type NUMAVG:  int
     :param NUMENV: when ``STATE`` is ``ENVelope``, how big should the
                    basis be for the envelope?
-                   One of 2, 4, 8, 16, 32, 64, 128, 245, 512, or 0
+                   One of 2, 4, 8, 16, 32, 64, 128, 256, 512, or 0
                    (for infinite enveloping).
     :type NUMENV:  int
 
