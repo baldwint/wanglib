@@ -78,7 +78,7 @@ class TDS3000(object):
         self.acquire = self._parameterset(bus, prefix = 'ACQ:',
             strs = ('MODE', 'STOPA'),
             ints = ('NUMAVG', 'NUMENV'),
-            bools = ('STATE'))
+            bools = ('STATE',))
 
     acquire = dict()
     """
