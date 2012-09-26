@@ -115,6 +115,25 @@ class TDS3000(object):
 
     #TODO document wfmpre parameter set
 
+    @property
+    def data_source(self):
+        """
+        Determines the default data curve returned by :meth:`get_curve`.
+
+        Possible values include `CH1`, `CH2`, `CH3`, `CH4`,
+        `MATH`, `MATH1` (same as `MATH`), `REF1`, `REF2`, `REF3`,
+        and `REF4`.
+
+        """
+        result = self.bus.ask('DAT:SOU?')
+        return result.rstrip()
+
+    @data_source.setter
+    def data_source(self, val):
+        if type(val) is int:
+            val = 'CH%d' % val
+        result = self.bus.write('DAT:SOU %s' % val)
+
     def get_curve(self):
         """
         Fetch a trace.
