@@ -78,7 +78,7 @@ class TDS3000(object):
         self.acquire = self._parameterset(bus, prefix = 'ACQ:',
             strs = ('MODE', 'STOPA'),
             ints = ('NUMAVG', 'NUMENV'),
-            bools = ('STATE'))
+            bools = ('STATE',))
 
     acquire = dict()
     """
@@ -115,13 +115,54 @@ class TDS3000(object):
 
     #TODO document wfmpre parameter set
 
-    def get_curve(self):
+    @property
+    def data_source(self):
+        """
+        Determines the default data curve returned by :meth:`get_curve`.
+
+        Possible values include `CH1`, `CH2`, `CH3`, `CH4`,
+        `MATH`, `MATH1` (same as `MATH`), `REF1`, `REF2`, `REF3`,
+        and `REF4`.
+
+        """
+        result = self.bus.ask('DAT:SOU?')
+        return result.rstrip()
+
+    @data_source.setter
+    def data_source(self, val):
+        if type(val) is int:
+            val = 'CH%d' % val
+        result = self.bus.write('DAT:SOU %s' % val)
+
+    def is_active(self, channel):
+        """
+        Ask whether a given waveform is active
+
+        :param channel: `CH1`, `CH2`, `CH3`, `CH4`,
+        `MATH`, `MATH1` (same as `MATH`), `REF1`, `REF2`, `REF3`,
+        or `REF4`.
+
+        """
+        return bool(int(self.bus.ask('sel:%s?' % channel)))
+
+    def get_curve(self, source=None):
         """
         Fetch a trace.
 
+        :param source: Channel to retrieve. Defaults to
+            value of :attr:`data_source`. Valid channels are
+            `CH1`, `CH2`, `CH3`, `CH4`, `MATH`, `MATH1` (same as
+            `MATH`), `REF1`, `REF2`, `REF3`, or `REF4`.
         :returns: A numpy array representing the current waveform.
 
         """
+        if source is None:
+            source = self.data_source
+        else:
+            self.data_source = source
+        if not self.is_active(source):
+            raise InstrumentError('%s not turned on' % source)
+
         fmt = '>' if self.wfmpre['BYT_OR'] == 'MSB' else '<'
         fmt += 'i' if self.wfmpre['BN_FMT'] == 'RI' else 'u'
         fmt += str(self.wfmpre['BYT_NR'])
@@ -140,14 +181,19 @@ class TDS3000(object):
 
         return numpy.fromstring(result, dtype = fmt)
 
-    def get_wfm(self):
+    def get_wfm(self, source=None):
         """
         Fetch a trace, scaled to actual units.
 
+        :param source: Channel to retrieve. Defaults to
+            value of :attr:`data_source`. Valid channels are
+            `CH1`, `CH2`, `CH3`, `CH4`, `MATH`, `MATH1` (same as
+            `MATH`), `REF1`, `REF2`, `REF3`, or `REF4`.
         :returns: Two numpy arrays: `t` and `y`
 
         """
-        y = ((self.get_curve().astype(float) - self.wfmpre['YOFF'])
+        curv = self.get_curve(source).astype(float)
+        y = ((curv - self.wfmpre['YOFF'])
              * self.wfmpre['YMULT']) + self.wfmpre['YZERO']
         t = (numpy.arange(self.wfmpre['NR_PT'], dtype=float)
              * self.wfmpre['XINCR']) + self.wfmpre['XZERO']

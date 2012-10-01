@@ -139,13 +139,13 @@ class ESP300_stage(_newport_stage):
     To use over RS232, use the following parameters:
         :baudrate: 19200
         :rtscts:   True
-        :term_chars: '\\r'
+        :term_chars: '\\r\\n'
 
     For example:
 
     >>> from wanglib.util import Serial
     >>> esp = Serial('/dev/ttyUSB', baudrate=19200, timeout=10, 
-    ...             rtscts=1, log='esp300.log', term_chars="\r")
+    ...             rtscts=1, log='esp300.log', term_chars="\r\n")
     >>> my_stage = ESP300_stage(1, esp)
 
     will make an object corresponding to axis 1 of the stage.
@@ -255,7 +255,7 @@ class ESP300_stage(_newport_stage):
         """
         #TODO: reverse dictionary lookup would be nice
         key = int(key)
-        resp = self.bus.ask(self.cmd("SN%d" % key))
+        self.bus.write(self.cmd("SN%d" % key))
 
 
 class MM3000_stage(_newport_stage):

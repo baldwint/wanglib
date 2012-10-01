@@ -88,8 +88,18 @@ if ser_avail:
             return resp
         
         def readall(self):
-            """Automatically read all the bytes from the serial port."""
-            return self.read(self.inWaiting())
+            """
+            Automatically read all the bytes from the serial port.
+
+            if :attr:`term_chars` is set, this will continue
+            to read until the terminating bytes are received.
+
+            """
+            resp = self.read(self.inWaiting())
+            if self.term_chars is not '':
+                while resp[-len(self.term_chars):] != self.term_chars:
+                    resp += self.read(self.inWaiting())
+            return resp
 
         def ask(self, query, lag=0.05):
             """
