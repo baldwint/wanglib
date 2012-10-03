@@ -13,16 +13,15 @@ corresponding classes.
     :SRS 830:        :class:`wanglib.instruments.lockins.srs830`
 
 .. note::
-
     The methods implemented by these two classes are named the same, but
-    currently, they behave very differently. For example, the EG&G 5110
-    returns measurements as a percentage of the sensitivity, but the SRS
-    830 always returns a figure in Volts.
+    don't always behave the same way. For example, the EG&G 5110
+    returns a 2-tuple with unit when the ADC ports are queried, but
+    the SRS 830 always returns a figure in volts.
 
 .. warning::
-    I'm planning on standardizing the return value formats in a future
-    version. This will make it easier to switch between lock-ins, but
-    will break existing code!
+    I'm working toward parity between the return value formats of the
+    two classes. This will make it easier to switch between lock-ins,
+    but will break existing code!
 
 """
 
@@ -129,19 +128,44 @@ class egg5110(object):
                      19: (200,'mV'), \
                      20: (500,'mV'), \
                      21: (1,'V')}
+
+    _V_scales = {'V': 1.,
+                'mV': 1e-3,
+                'uV': 1e-6,
+                'nV': 1e-9}
     
-    def get_sensitivity(self):
-        """Get the current sensitivity (as a 2-tuple)."""
+    def get_sensitivity(self, unit='V'):
+        """
+        Get the current sensitivity, in Volts.
+
+        >>> li.get_sensitivity()
+        0.1
+
+        If the `unit` kwarg is specified, the value will
+        be converted to the desired unit instead.
+
+        >>> li.get_sensitivity(unit='uV')
+        100000.
+
+        Using `unit=True` will return a value in a 2-tuple
+        along with the most sensible unit (as a string).
+
+        >>> li.get_sensitivity(unit=True)
+        (100, 'mV')
+
+        """
         val = self.bus.ask("SEN")
-        return self.sensitivities[int(val)]
+        q,u = self.sensitivities[int(val)]
+        if unit in self._V_scales.keys():
+            return q * self._V_scales[u] / self._V_scales[unit]
+        else:
+            return q,u
     def set_sensitivity(self,code):
         """Set the current sensitivity (Using a code)."""
         self.bus.write("SEN %d" % code)
     sensitivity = property(get_sensitivity,set_sensitivity)
-    """
-    Current value of the sensitivity as a 2-tuple.
-
-    """
+    """ Current value of the sensitivity, in volts. """
+    #TODO: set with a value in volts
 
     # time constant functions
 
@@ -174,18 +198,45 @@ class egg5110(object):
 
     # measurement functions
 
-    def measure(self, command, unit=None):
+    def measure(self, command, unit='V'):
         """
-        Measure one of the usual signals (X, Y, or MAG).
+        Measure one of the usual voltage signals (X, Y, or MAG).
+
+        >>> li.measure('X')
+        0.0014
         
-        Results are given as a fraction of full-scale
-        (that is, sensitivity). To change this behavior,
-        use the 'unit' keyword argument.
+        Results are given in volts. To specify a different
+        unit, use the ``unit`` kwarg.
+
+        >>> li.measure('X', unit='mV')
+        1.4
+
+        To skip this conversion, and instead return the
+        result as a fraction of the sensitivity (what the
+        manual calls "percent of full-scale"), specify
+        ``unit=None``:
+
+        >>> li.measure('X', unit=None)
+        .14
+
+        You will need to multiply by the sensitivity (in
+        this example, 10mV) to get a meaningful number.
+        To perform this multiplication automatically,
+        specify ``unit=True``:
 
         >>> li.measure('X', unit=True)
+        (1.4, 'mV')
 
-        This will return a 2-tuple containing the measurement
+        This returns a 2-tuple containing the measurement
         and the unit string ("V", "mV", etc.),
+
+        .. note ::
+            to provide an answer in real units, the EG&G
+            5110 needs to be queried for its sensitivity
+            on every single measurement. This can slow
+            things down. If you need to make measurements
+            quickly, and are using a fixed sensitivity,
+            specify ``unit=None`` for speed.
 
         """
         response = self.bus.ask(command)
@@ -194,37 +245,40 @@ class egg5110(object):
         fraction = int(response) / 10000.
         if unit is None:
             return fraction 
+        elif unit in self._V_scales.keys():
+            sens = self.get_sensitivity(unit=unit)
+            return fraction * sens
         else:
-            sens,unit = self.sensitivity
+            sens,unit = self.get_sensitivity(unit=True)
             return fraction * sens, unit
 
     def get_x(self):
-        """ Get current value of X. """
+        """ Get current value of X, in volts. """
         return self.measure('X')
     x = property(get_x)
-    """Current value of X. """
+    """Current value of X, in volts. """
 
     def get_y(self):
-        """ Get current value of Y. """
+        """ Get current value of Y, in volts. """
         return self.measure('Y')
     y = property(get_y)
-    """Current value of Y. """
+    """Current value of Y, in volts. """
 
     def get_r(self):
-        """ Get current value of R. """
+        """ Get current value of R, in volts. """
         return self.measure('MAG')
     r = property(get_r)
-    """Current value of R. """
+    """Current value of R, in volts. """
 
     def get_phase(self):
-        """ Get current value of the phase. """
+        """ Get current value of the phase, in degrees. """
         # phase measurements come in millidegrees
         # so convert them to degrees
         multiplier = float(1) / 1000
         response = self.bus.ask('PHA')
-        return int(response) * multiplier, 'degrees'
+        return int(response) * multiplier
     phase = property(get_phase)
-    """Current value of the phase. """
+    """Current value of the phase, in degrees. """
 
     # adc function
 
