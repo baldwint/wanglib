@@ -25,7 +25,7 @@ corresponding classes.
 
 """
 
-from wanglib.util import InstrumentError
+from wanglib.util import InstrumentError, sciround
 
 class srs830(object):
     """ A Stanford Research Systems model SR830 DSP lock-in.
@@ -157,7 +157,8 @@ class egg5110(object):
         val = self.bus.ask("SEN")
         q,u = self.sensitivities[int(val)]
         if unit in self._V_scales.keys():
-            return q * self._V_scales[u] / self._V_scales[unit]
+            sens = q * self._V_scales[u] / self._V_scales[unit]
+            return sciround(sens, 1)
         else:
             return q,u
     def set_sensitivity(self,code):
