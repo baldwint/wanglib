@@ -134,6 +134,19 @@ class TDS3000(object):
             val = 'CH%d' % val
         result = self.bus.write('DAT:SOU %s' % val)
 
+    def save_wfm(self, source, dest):
+        """
+        Store a waveform locally on the oscilloscope.
+
+        :param source: channel to transfer data from.
+                    `CH<x>`, `MATH<x>`, or `REF<x>`.
+        :type  source: str
+        :param dest: Which one of the four `REF<x>` to save into.
+        :type  dest: str
+
+        """
+        self.bus.write('SAV:WAVE %s,%s' % (source, dest))
+
     def is_active(self, channel):
         """
         Ask whether a given waveform is active
