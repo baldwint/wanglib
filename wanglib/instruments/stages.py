@@ -37,7 +37,7 @@ the delay in picoseconds, etc.
 
 """
 
-from wanglib.util import num, InstrumentError
+from wanglib.util import num, InstrumentError, Serial
 from time import sleep
 
 class _newport_stage(object):
@@ -141,14 +141,23 @@ class ESP300_stage(_newport_stage):
         :rtscts:   True
         :term_chars: '\\r\\n'
 
-    For example:
+    These settings are used by default if you simply pass
+    the name of the serial port as a string:
+
+    >>> my_stage = ESP300_stage(1, '/dev/ttyUSB')
+
+    This will make an object corresponding to axis 1 of the stage.
+
+    For full control over the RS232 communication, provide a
+    ``Serial`` instance instead of an address. For example:
 
     >>> from wanglib.util import Serial
     >>> esp = Serial('/dev/ttyUSB', baudrate=19200, timeout=10, 
     ...             rtscts=1, log='esp300.log', term_chars="\r\n")
     >>> my_stage = ESP300_stage(1, esp)
 
-    will make an object corresponding to axis 1 of the stage.
+    This will work the same as above, but also log command
+    traffic to the file ``esp300.log``.
     
     """
 
@@ -156,6 +165,14 @@ class ESP300_stage(_newport_stage):
     _get_abs_pos_cmd = 'PA?'
     _set_abs_pos_cmd = 'PA%f'
     _rel_move_cmd =  "PR%f"
+
+    def __init__(self, axisnum, bus=None):
+        if type(bus) is str:
+            # if only a device name is given, create a serial instance
+            bus = Serial(bus, baudrate=19200,
+                         timeout=10, rtscts=1,
+                         term_chars="\r\n")
+        super(ESP300_stage, self).__init__(axisnum, bus)
 
     @property
     def on(self):
