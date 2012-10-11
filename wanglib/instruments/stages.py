@@ -108,15 +108,16 @@ class _newport_stage(object):
         self.bus.write(self.cmd(cmd))
         self.wait()
 
-    @property
-    def pos(self):
-        """ Absolute position of the stage """
+    def get_pos(self):
+        """ Query the absolute position of the stage """
         resp = self.bus.ask(self.cmd(self._get_abs_pos_cmd))
         return num(resp.rstrip(' COUNTS'))
-    @pos.setter
-    def pos(self, val):
+    def set_pos(self, val):
+        """ Set the absolute position of the stage """
         self.bus.write(self.cmd(self._set_abs_pos_cmd % val))
         self.wait()
+    pos = property(get_pos, set_pos)
+    """ Absolute position of the stage """
 
     def find_zero(self):
         """
