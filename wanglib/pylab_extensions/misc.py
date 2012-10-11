@@ -34,6 +34,21 @@ def bll(index = -1, lag = 0.3):
     line.set_ms(ms) # and marker sizes
     draw()
 
+def gll(index = -1, blink = True):
+    """
+    Get last line.
+
+    Retrieves x,y data of the last line and returns them as
+    a tuple of two numpy arrays.
+
+    To get a different line, specify the index.
+
+    """
+    line = gca().lines[index]
+    x,y = line.get_data()
+    if blink:
+        bll(index) # blink the line which one we are getting
+    return numpy.array(x), numpy.array(y)
 
 def sll(fname, index = -1, blink = True):
     """
