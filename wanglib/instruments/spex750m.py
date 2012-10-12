@@ -68,13 +68,13 @@ class spex750m(object):
     """
     A class implementing standard Jobin-Yvon serial commands
     for simple spectrometers like the SPEX 750M.
-    
-    By default, this class is configured to look for the 750M 
+
+    By default, this class is configured to look for the 750M
     plugged into ``/dev/ttyUSB0`` (the first port on the USB-serial
-    adapter, when run under linux). 
+    adapter, when run under linux).
 
     """
-    
+
     def __init__(self, addr=None):
         """
         Connect to the spectrometer and initialize its hardware.
@@ -86,7 +86,7 @@ class spex750m(object):
         """
 
         if addr is None:
-            addr = self._default_location 
+            addr = self._default_location
         self.bus = Serial(addr, timeout=10, baudrate=19200)
 
         try:
@@ -163,11 +163,11 @@ class spex750m(object):
         and checked to make sure it's the "okay" status.
 
         """
-        while self.bus.inWaiting() < expected_bytes: 
+        while self.bus.inWaiting() < expected_bytes:
             # as long as the buffer is empty, hang out
             sleep(0.050)
         # read the status byte when it arrives
-        resp = self.bus.read() 
+        resp = self.bus.read()
         if resp != 'o':
             raise InstrumentError("750M operation failed: %s" % resp)
 
@@ -199,7 +199,7 @@ class spex750m(object):
         self.bus.write(cmd)
         self.wait_for_ok()
         while self.is_busy():
-            # wait for the motors to rest 
+            # wait for the motors to rest
             sleep(0.050)
 
     def get_wavelength(self):
@@ -209,7 +209,7 @@ class spex750m(object):
         self.wait_for_ok()
         resp = self.bus.readall()
         # convert to wavelength units
-        wl = int(resp) / float(self._steps_per_nm) 
+        wl = int(resp) / float(self._steps_per_nm)
         return wl
 
     def set_wavelength(self, wl):
@@ -235,12 +235,12 @@ class triax320(spex750m):
     A class implementing Jobin-Yvon serial commands
     for more advanced spectrometers like the TRIAX 320.
 
-    Instantiate as you would a spex750m. If you don't 
-    specify a serial port, this class will assume the 
+    Instantiate as you would a spex750m. If you don't
+    specify a serial port, this class will assume the
     spectrometer is attached to ``/dev/ttyUSB1``, the second
     port on the USB-serial converter.
 
-    Unlike the 750M, the Triax 
+    Unlike the 750M, the Triax
         - has motorized entrance and exit slits
         - zeroes its grating on power-up.
 
@@ -252,7 +252,7 @@ class triax320(spex750m):
     # different default location.
     # hopefully the __init__ function will pick this up.
     _default_location = '/dev/ttyUSB1'
-    
+
     # the Triax series isn't designed for the steps-per-nm
     # system (although these commands work).
     # instead, it works in actual wavelength values.
@@ -273,7 +273,7 @@ class triax320(spex750m):
         self.bus.write("Z61,1,"+str(wl)+"\r")
         self.wait_for_ok()
         while self.is_busy():
-            # wait for the motors to rest 
+            # wait for the motors to rest
             sleep(0.050)
 
     wavelength = property(get_wavelength, set_wavelength)
@@ -299,7 +299,7 @@ class triax320(spex750m):
         self.bus.write("k0,%d,%d\r" % (slit_number, amount))
         self.wait_for_ok()
         while self.is_busy():
-            # wait for the motors to rest 
+            # wait for the motors to rest
             sleep(0.050)
 
     def _get_slit_position(self, slit_number):
@@ -307,7 +307,7 @@ class triax320(spex750m):
         Read the current absolute position of a slit.
 
         For example, read the absolute position of slit 0:
-        
+
         >>> spec._get_slit_position(0)
         5
 
@@ -418,10 +418,3 @@ class triax320(spex750m):
         # (yan does that with labview)
         # but I think this is implied by "A"
 
-
-
-
-
-
-
-        
