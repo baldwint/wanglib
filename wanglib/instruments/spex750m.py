@@ -43,18 +43,11 @@ This will re-set the calibration to 800nm:
 >>> beast.wl
 800.
 
-Optionally, you can calibrate it during the instantiation step,
-like so (either of these works):
-
->>> beast = spex750m(calibration = 800)
->>> beast = spex750m(800)
-
-where 800 is measured in nm.
-
 You can control the spectrometer using the methods documented below.
 For example, this performs a wavelength scan:
 
->>> beast = spex750m(800)
+>>> beast = spex750m('/dev/ttyUSB0')
+>>> beast.calibrate(800)
 >>> beast.set_wavelength(750)
 >>> for i in range(200):
 ...    beast.rel_move(0.5)
@@ -82,16 +75,13 @@ class spex750m(object):
 
     """
     
-    def __init__(self, calibration=None, addr=None):
+    def __init__(self, addr=None):
         """
-        Initialize (and optionally calibrate) the spectrometer.
+        Connect to the spectrometer and initialize its hardware.
 
-        Keyword arguments:
-            addr -- the serial interface where the 
-                    spectrometer is found. 
-                    Default: /dev/ttyUSB0
-            calibration -- the current wavelength value
-                            of the spectrometer.
+        :param addr: the serial interface where the
+                     spectrometer is found.
+                     Default: ``/dev/ttyUSB0``
 
         """
 
@@ -105,9 +95,6 @@ class spex750m(object):
             print "%s, rebooting once..." % err
             self.reboot()           # in case of trouble, reboot
             self.init_hardware()    # and try again.
-
-        if calibration is not None:
-            self.calibrate(calibration)
 
     # 750M specific data
     _steps_per_nm = 4000
