@@ -67,8 +67,10 @@ class TDS3000(object):
 
     def __init__(self, bus=None):
         if bus is None:
+            bus = '/dev/ttyS0'
+        if type(bus) is str:
             from wanglib.util import Serial
-            bus = Serial('/dev/ttyS0', baudrate=19200,
+            bus = Serial(bus, baudrate=19200,
                          rtscts=True, term_chars='\n')
         self.bus = bus
         self.wfmpre = self._parameterset(bus, prefix='WFMP:',
