@@ -5,20 +5,26 @@ Interfaces to New Focus diode laser controllers.
 
 """
 
-from wanglib.util import InstrumentError
+from wanglib.util import InstrumentError, show_newlines
 
 class velocity6300(object):
     """
-    A New Focus Velocity 6300 diode laser controller. GPIB.
+    A New Focus Velocity 6300 diode laser controller.
 
     To instantiate, pass an instrument object to the constructor.
-    e.g., for a controller with gpib address 1, attached to a 
+    e.g., for a controller with GPIB address 1, attached to a
     prologix GPIB controller:
 
     >>> laser = velocity6300(plx.instrument(1, auto=False))
 
-    where plx is the prologix object. If you're using prologix,
+    where ``plx`` is the prologix object. If you're using prologix,
     it's very important to turn off read-after-write!
+
+    To use with RS232, use ``\\r`` as the termination
+    character. For example:
+
+    >>> from wanglib.util import Serial
+    >>> laser = velocity6300(Serial('/dev/ttyUSB0', baudrate=19200, term_chars='\\r'))
 
     """
 
@@ -38,21 +44,27 @@ class velocity6300(object):
     # use this behavior to make sensible error messages:
     def write(self, cmd):
         """
-        issue a command to the laser.
+        Issue a command to the laser.
 
-        unlike bus.write, this checks to make sure the laser
-        understood what it was told.
+        This takes care of two things:
+            - Formats the command with ``@`` if using RS-232
+            - Verifies that the laser responds with ``OK``
+
         """
-        resp = self.bus.ask(cmd)
+        # if communicating over serial, commands must start with '@'
+        prepend = '@' if self.is_serial else ''
+        resp = self.bus.ask(prepend + cmd).rstrip()
         if resp != 'OK':
             # try one more time
-            resp = self.bus.ask(cmd)
+            resp = self.bus.ask(prepend + cmd)
         if resp != 'OK':
             msg = "laser didn't like command: %s. it says: %s"
             raise InstrumentError(msg % (cmd,resp))
 
     def __init__(self, bus):
         self.bus = bus
+        # establish RS232 vs. GPIB by testing for 'isatty' method
+        self.is_serial = hasattr(bus, 'isatty')
         print self.bus.ask('*IDN?')
 
     def stop_tracking(self):
@@ -63,7 +75,7 @@ class velocity6300(object):
     def busy(self):
         """ is an operation in progress? """
         return not bool(int(self.bus.ask('*OPC?')))
-        
+
     @property
     def on(self):
         """ is the laser on or off?"""
