@@ -43,12 +43,14 @@ class burleigh(object):
             wl, unit = self.parse(response)
             yield time() - start, wl
 
-    @property
-    def wl(self):
+    def get_wl(self):
+        """ Get the current wavelength (or frequency) """
         self.purge() # purge the buffer
         response = self.bus.readline().rstrip()
         wl, unit = self.parse(response)
         return wl
+    wl = property(get_wl)
+    """ Current wavelength (or frequency) """
 
 if __name__ == '__main__':
     from pylab import *
