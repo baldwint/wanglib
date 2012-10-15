@@ -88,15 +88,21 @@ class velocity6300(object):
     # wavelength control
     # ------------------
 
-    @property
-    def wl(self):
-        """ current wavelength of laser (nm) """
+    def get_wl(self):
+        """ Get current wavelength of laser (nm) """
         return float(self.bus.ask('sens:wave'))
-    @wl.setter
-    def wl(self, val):
-        # can take a numerical value, or 'min' or 'max'
+
+    def set_wl(self, val):
+        """
+        Set current wavelength of laser (nm).
+
+        Can take a numerical value, or 'min' or 'max'
+
+        """
         self.write('wave %s' % val)
 #        self.stop_tracking()
+    wl = property(get_wl, set_wl)
+    """ Current wavelength of laser (nm) """
 
 #    @property
 #    def wl_set(self):
@@ -125,13 +131,14 @@ class velocity6300(object):
         """ max wavelength of this diode """
         return self.bus.ask('wave ? max')
 
-    @property
-    def piezo(self):
-        """ return piezo voltage as % of full-scale """
+    def get_piezo(self):
+        """ Return piezo voltage as % of full-scale. """
         return float(self.bus.ask('sens:volt:piez'))
-    @piezo.setter
-    def piezo(self, val):
+    def set_piezo(self, val):
+        """ Set piezo voltage as % of full-scale. """
         self.write('volt %s' % val)
+    piezo = property(get_piezo, set_piezo)
+    """ Piezo voltage as % of full-scale. """
 
     # ----------------------
     # other laser properties
