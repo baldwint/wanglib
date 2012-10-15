@@ -8,9 +8,13 @@ class burleigh(object):
 
     """
 
-    unit_codes = { 2549: 'nm',
-                   2552: 'cm-1',
-                   2564: 'GHz' }
+    unit_codes = { '2549': 'nm',
+                   '2552': 'cm-1',
+                   '2564': 'GHz',
+                   '2589': 'nm deviation',
+                   '2592': 'cm-1 deviation',
+                   '25A4': 'GHz deviation',
+                 }
 
     def __init__(self, port = '/dev/ttyUSB0'):
         self.bus = Serial(port)
@@ -27,7 +31,7 @@ class burleigh(object):
             val = float(meas)
         except ValueError:
             val = None
-        return val, self.unit_codes[int(code)]
+        return val, self.unit_codes[code]
 
     def data_stream(self):
         start = time()
