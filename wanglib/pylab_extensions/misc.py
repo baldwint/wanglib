@@ -84,6 +84,7 @@ def relim(line):
 def apply_mask(line, mask):
     """ mask x and y (to remove bad points, etc). """
     x,y = line.get_data()
+    x,y = x.copy(), y.copy()
     y[numpy.invert(mask)] = None
     line.set_ydata(y)
     relim(line)
