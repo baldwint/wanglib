@@ -47,7 +47,11 @@ version that changes all the time. Install this with ``pip``::
     $ pip install --user -e hg+https://bitbucket.org/tkb/wanglib#egg=wanglib
 
 The ``--user`` flag is a good idea to prevent version conflicts with other
-users on the same machine. 
+users on the same machine.
+It's unnecessary if you have some other means of doing that
+(e.g., in a virtualenv_).
+
+.. _virtualenv: http://www.virtualenv.org/
 
 This creates an editable clone of the repository in your home directory at
 ``$HOME/src/wanglib``. To update to the latest version, change to this
