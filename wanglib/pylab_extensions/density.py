@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 
-from pylab import imshow
+from matplotlib.pyplot import gca
 
-def density_plot(two_dimensional, horiz, vert):
+def density_plot(two_dimensional, horiz, vert, ax=None):
     """
     Display a 2D density plot - like imshow, but with 
     axes labels corresponding to the two axes provided.
@@ -13,8 +13,11 @@ def density_plot(two_dimensional, horiz, vert):
     :param two_dimensional: data to plot. shape: (M, N)
     :param horiz: x-axis. should have length N.
     :param vert: y-axis. should have length M.
+    :param ax: axis upon which to plot.
 
     """
+    if ax is None:
+        ax = gca()
     horiz_spacing = (horiz[-1] - horiz[0]) / (len(horiz) - 1.)
     vert_spacing = (vert[-1] - vert[0]) / (len(vert) - 1.)
     # add spacing to the upper bounds. This aligns tick
@@ -27,7 +30,7 @@ def density_plot(two_dimensional, horiz, vert):
     asp /=  float(len(horiz))/ len(vert)
     # the first step alone gets us back to a square image aspect.
     # the second will restore the native aspect ratio of the array.
-    imshow(two_dimensional, extent=ext, aspect = asp,
-           origin='lower', interpolation='nearest')
+    ax.imshow(two_dimensional, extent=ext, aspect = asp,
+              origin='lower', interpolation='nearest')
 
 
