@@ -156,12 +156,14 @@ if __name__ == "__main__":
     wl,ccd = clnt.get_spectrum()
     line, = p.plot(wl,ccd.sum(axis=0))
     ax = line.get_axes()
+    first = True
     while True:
         # update it continuously
         wl,ccd = clnt.get_spectrum()
         line.set_ydata(ccd.sum(axis=0))
-        if opts.autoscale:
+        if opts.autoscale or first:
             ax.relim()
             ax.autoscale_view()
+            first=False
         p.draw()
 
