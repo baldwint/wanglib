@@ -156,5 +156,7 @@ if __name__ == "__main__":
         # update it continuously
         wl,ccd = clnt.get_spectrum()
         line.set_ydata(ccd.sum(axis=0))
+        p.gca().relim()
+        p.gca().autoscale_view()
         p.draw()
 
