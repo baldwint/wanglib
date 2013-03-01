@@ -63,8 +63,9 @@ class labview_client(object):
     To get a spectrum, use :meth:`get_spectrum`.
 
     """
-    def __init__(self, center_wl, host =
-                 "128.223.23.240", port = 3663):
+    def __init__(self, center_wl, host = None, port = 3663):
+        if host is None:
+            host = "128.223.23.240"
         self.sock = s.socket(s.AF_INET,s.SOCK_STREAM)
         self.sock.connect((host,port))
         self.center_wl = center_wl
@@ -143,10 +144,7 @@ if __name__ == "__main__":
     center_wl = float(args[0])
 
     # connect to server
-    if opts.ip is None:
-        clnt = labview_client(center_wl)
-    else:
-        clnt = labview_client(center_wl, host=opts.ip)
+    clnt = labview_client(center_wl, host=opts.ip)
     #clnt = fake_ccd(center_wl)
 
     # make a plot
