@@ -138,6 +138,9 @@ if __name__ == "__main__":
     parser = OptionParser()
     parser.add_option('--ip', dest='ip', default=None,
                       help='IP address of CCD server')
+    parser.add_option('--autoscale', dest='autoscale',
+                      default=False, action='store_true',
+                      help='Re-scale the axes on each acquisition')
     opts, args = parser.parse_args()
 
     # read center wl from command line
@@ -152,11 +155,13 @@ if __name__ == "__main__":
     p.hold(False)
     wl,ccd = clnt.get_spectrum()
     line, = p.plot(wl,ccd.sum(axis=0))
+    ax = line.get_axes()
     while True:
         # update it continuously
         wl,ccd = clnt.get_spectrum()
         line.set_ydata(ccd.sum(axis=0))
-        p.gca().relim()
-        p.gca().autoscale_view()
+        if opts.autoscale:
+            ax.relim()
+            ax.autoscale_view()
         p.draw()
 
