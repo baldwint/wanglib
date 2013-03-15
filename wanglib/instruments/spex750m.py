@@ -100,6 +100,9 @@ class spex750m(object):
     _steps_per_nm = 4000
     _default_location = '/dev/ttyUSB0'
 
+    def __str__(self):
+        return 'Spex 750M'
+
     def boot_status_check(self):
         """Check the boot status of the controller.
 
@@ -252,6 +255,9 @@ class triax320(spex750m):
     # different default location.
     # hopefully the __init__ function will pick this up.
     _default_location = '/dev/ttyUSB1'
+
+    def __str__(self):
+        return 'Triax 320'
 
     # the Triax series isn't designed for the steps-per-nm
     # system (although these commands work).
