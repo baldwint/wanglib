@@ -15,13 +15,19 @@ Command-line invocation
 For a simple live display from the CCD, invoke
 this module as a script::
 
-    $ python -m wanglib.ccd 800
+    $ python -m wanglib.ccd --ip 128.223.xxx.xxx 800
 
 where 800 is the center wavelength of the grating
-(as read from the window). You may need to specify
-the IP address of the CCD server:: 
+(as read from the window). You will need to specify
+the real IP address of the CCD server using the ``--ip``
+flag.
 
-    $ python -m wanglib.ccd --ip 128.223.23.240 800
+A `more sophisticated GUI`_ for the CCD is available.
+This program can save data, zoom in and out, and move
+the grating on the Spex 750M.
+
+.. _`more sophisticated GUI`: https://github.com/baldwint/ccd-gui
+
 
 Client library
 ++++++++++++++
@@ -64,8 +70,6 @@ class labview_client(object):
 
     """
     def __init__(self, center_wl, host = None, port = 3663):
-        if host is None:
-            host = "128.223.23.240"
         self.sock = s.socket(s.AF_INET,s.SOCK_STREAM)
         self.sock.connect((host,port))
         self.center_wl = center_wl
