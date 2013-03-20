@@ -219,6 +219,8 @@ class spex750m(object):
         """Move to the wavelength value specified.
         contingent on proper calibration, of course.
         """
+        if wl < 0 or wl > 1500:
+            raise InstrumentError("Out of Range")
         distance_to_move = wl - self.get_wavelength()
         self.rel_move(distance_to_move)
 
