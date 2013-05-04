@@ -148,12 +148,11 @@ class _prologix_base(object):
         """
         return instrument(self, addr, **kwargs)
 
-
-class prologix_ethernet(_prologix_base):
+class PrologixEthernet(_prologix_base):
     """
     Interface to a Prologix GPIB-Ethernet controller.
 
-    To instantiate, specify the IP address of the controller:
+    To instantiate, use the ``prologix_ethernet`` factory:
 
     >>> plx = prologix.prologix_ethernet('128.223.131.156')
 
@@ -169,7 +168,7 @@ class prologix_ethernet(_prologix_base):
         self.bus.send('++mode 1\n')
 
         # do common startup routines
-        super(prologix_ethernet, self).__init__()
+        super(PrologixEthernet, self).__init__()
 
     def write(self, command, lag=0.1):
         self.bus.send("%s\n" % command)
@@ -186,7 +185,7 @@ class prologix_ethernet(_prologix_base):
         return self.readall()
 
 
-class prologix_USB(_prologix_base):
+class PrologixUSB(_prologix_base):
     """
     Interface to a Prologix GPIB-USB controller.
 
@@ -213,7 +212,7 @@ class prologix_USB(_prologix_base):
         self.savecfg = False
 
         # do common startup routines
-        super(prologix_USB, self).__init__()
+        super(PrologixUSB, self).__init__()
 
     def write(self, command, lag=0.1):
         self.bus.write("%s\r" % command)
@@ -230,6 +229,39 @@ class prologix_USB(_prologix_base):
         self.readall()  # clear the buffer
         self.write(query, *args, **kwargs)
         return self.readall()
+
+controllers = dict()
+
+def prologix_ethernet(ip):
+    """
+    Factory function for a Prologix GPIB-Ethernet controller.
+
+    To instantiate, specify the IP address of the controller:
+
+    >>> plx = prologix.prologix_ethernet('128.223.131.156')
+
+    """
+    if ip not in controllers:
+        controllers[ip] = PrologixEthernet(ip)
+    return controllers[ip]
+
+def prologix_USB(port='/dev/ttyUSBgpib', log=False):
+    """
+    Factory for a Prologix GPIB-USB controller.
+
+    To instantiate, specify the virtual serial port where the
+    controller is plugged in:
+
+    >>> plx = prologix.prologix_USB('/dev/ttyUSBgpib')
+
+    On Windows, you could use something like
+
+    >>> plx = prologix.prologix_USB('COM1')
+
+    """
+    if port not in controllers:
+        controllers[port] = PrologixUSB(port)
+    return controllers[port]
 
 class instrument(object):
     """
