@@ -284,11 +284,11 @@ class egg5110(object):
     # adc function
 
     def get_ADC(self,n):
-        """Read one of the four ADC ports."""
+        """Read one of the four ADC ports. Return value in volts."""
         if n not in range(1,4):
             raise InstrumentError("Indicate ADC between 1 and 4")
         response = self.bus.ask("ADC %d" % n)
-        return 0.001 * response, 'V'
+        return 0.001 * int(response)
 
     def autophase(self):
         """ 
