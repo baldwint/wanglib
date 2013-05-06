@@ -3,7 +3,7 @@
 from matplotlib.pyplot import gca
 
 def density_plot(two_dimensional, horiz, vert,
-                 aspect=None, ax=None):
+                 ax=None, **kwargs):
     """
     Display a 2D density plot - like imshow, but with 
     axes labels corresponding to the two axes provided.
@@ -15,6 +15,8 @@ def density_plot(two_dimensional, horiz, vert,
     :param horiz: x-axis. should have length N.
     :param vert: y-axis. should have length M.
     :param ax: axis upon which to plot.
+
+    Keyword arguments are passed to imshow.
 
     """
     if ax is None:
@@ -28,12 +30,16 @@ def density_plot(two_dimensional, horiz, vert,
            vert[0], vert[-1] + vert_spacing]
     # this provides axes labels. Unfortunately it also changes
     # the aspect ratio, so we need to stretch it back.
+    aspect = kwargs.pop('aspect', None)
     if aspect is None:
         aspect = abs((ext[1] - ext[0]) / (ext[3] - ext[2]))
         aspect /=  float(len(horiz))/ len(vert)
         # the first step alone gets us back to a square image aspect.
         # the second will restore the native aspect ratio of the array.
+    # set alternate kwarg defaults
+    origin = kwargs.setdefault('origin', 'lower')
+    interpolation = kwargs.setdefault('interpolation', 'nearest')
     ax.imshow(two_dimensional, extent=ext, aspect = aspect,
-              origin='lower', interpolation='nearest')
+              **kwargs)
 
 
