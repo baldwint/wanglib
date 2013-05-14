@@ -13,9 +13,8 @@ class InstrumentError(Exception):
 try:
     import serial
 except ImportError:
-    ser_avail = False
-else:
-    ser_avail = True
+    # PySerial is not installed
+    serial = None
 
 def show_newlines(string):
     """
@@ -25,7 +24,7 @@ def show_newlines(string):
     """
     return string.replace('\r', '<CR>').replace('\n', '<LF>')
 
-if ser_avail:
+if serial:
     class Serial(serial.Serial):
         """
         Extension of PySerial_'s :class:`serial.Serial` class that
