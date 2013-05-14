@@ -304,7 +304,7 @@ def scanner(xvals, set, get, lag = 0.3):
     >>> tr = triax320()
     >>> li = egg5110(instrument(plx,12))
     >>> wls = arange(770, 774, .1)
-    >>> gen = scanner(wls, tr.set_wl, li.get_x)
+    >>> gen = scanner(wls, set=tr.set_wl, get=li.get_x)
     >>> result = plotgen(gen)
 
     Sometimes we will want to set/measure an attribute of an object on each
@@ -328,6 +328,41 @@ def scanner(xvals, set, get, lag = 0.3):
         else:
             Y = get[0].__getattribute__(get[1])
         yield X,Y
+
+def averager(func, n, lag=0.1):
+    """
+    Given a function ``func``, returns an implementation of that
+    function that just repeats it ``n`` times, and returns an average
+    of the result.
+
+    :param func: function returning a measurement
+    :type func: function
+    :param n: number of times to call ``func``.
+    :type n: int
+    :param lag: seconds to sleep between measurements.
+    :type lag: float
+    :returns:   the average of the ``n`` measurements.
+
+    This is useful when scanning. For example, if scanning a spectrum
+    with the lockin like so:
+
+    >>> gen = scanner(wls, set=tr.set_wl, get=li.get_x)
+
+    We can implement a version that averages three lockin measurements
+    with a 0.3s delay like so:
+
+    >>> acq = averager(li.get_x, 3, lag=0.3)
+    >>> gen = scanner(wls, set=tr.set_wl, get=acq)
+
+    """
+    def f(*args, **kwargs):
+        ls = []
+        ls.append(func(*args, **kwargs))
+        for i in range(n - 1):
+            sleep(0.1)
+            ls.append(func(*args, **kwargs))
+        ar = array(ls)
+        return ar.mean(axis=0)
 
 def save(fname, array):
     """
