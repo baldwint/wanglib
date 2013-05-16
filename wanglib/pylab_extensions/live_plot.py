@@ -75,19 +75,23 @@ def plotgen(gen, *args, **kwargs):
     y = []
 
     # make a (initially blank) line.
-    line, = plot(x, y, *args, **kwargs) 
+    line, = plot(x, y, *args, **kwargs)
 
-    for pt in gen: # for new y value generated
-        
-        x.append(pt[0])
-        y.append(pt[1])
+    try:
+        for pt in gen: # for new y value generated
 
-        line.set_data(x, y)     # update plot with new data
-        line._invalid = True    # this clears the cache or something
-        gca().relim()           # recalculate the limits
-        gca().autoscale_view()  # autoscale the bounds to include it all 
-        draw()                  # force a redraw
-    return line.get_ydata()
+            x.append(pt[0])
+            y.append(pt[1])
+
+            line.set_data(x, y)     # update plot with new data
+            line._invalid = True    # this clears the cache or something
+            gca().relim()           # recalculate the limits
+            gca().autoscale_view()  # autoscale the bounds to include it all
+            draw()                  # force a redraw
+    except KeyboardInterrupt:
+        print "Cancelled"
+    finally:
+        return line.get_ydata()
 
 if __name__ == '__main__':
 
