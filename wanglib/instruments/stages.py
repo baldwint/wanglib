@@ -360,8 +360,7 @@ class delay_stage(_newport_stage):
 
     """
 
-    @property
-    def t(self):
+    def set_t(self):
         """
         Convert stage position in mm to delay in ps
 
@@ -370,10 +369,11 @@ class delay_stage(_newport_stage):
         t = 2 * (self.stage_length - self.pos) / self.c
         return t
 
-    @t.setter
-    def t(self, new_val):
+    def set_t(self, new_val):
         pos = self.stage_length - (self.c * new_val) * 0.5
         self.pos = pos
+
+    t = property(get_t, set_t)
  
 
 # finally: the actual stages we use on the table
