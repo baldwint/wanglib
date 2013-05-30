@@ -362,6 +362,7 @@ def averager(func, n, lag=0.1):
             ls.append(func(*args, **kwargs))
         ar = array(ls)
         return ar.mean(axis=0)
+    return f
 
 def save(fname, array):
     """
