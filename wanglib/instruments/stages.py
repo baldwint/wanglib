@@ -360,7 +360,7 @@ class delay_stage(_newport_stage):
 
     """
 
-    def set_t(self):
+    def get_t(self):
         """
         Convert stage position in mm to delay in ps
 
