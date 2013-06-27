@@ -267,6 +267,12 @@ class triax320(spex750m):
     # the following functions shadow the ones defined
     # above, to prefer the extended 'Z' functions.
 
+    def calibrate(self, wl):
+        """Set wavelength of Triax without moving motor """
+        self.bus.readall()
+        self.bus.write("Z60,1,"+str(wl)+"\r")
+        self.wait_for_ok()
+
     def get_wavelength(self):
         """Query the current wavelength """
         self.bus.readall()
