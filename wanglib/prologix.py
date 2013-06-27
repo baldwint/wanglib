@@ -25,9 +25,11 @@ use. Here we are using a Prologix GPIB-USB controller at
 ``/dev/ttyUSBgpib``. If we later switch to using a Prologix
 GPIB-Ethernet controller, we would instead use
 
->>> plx = prologix.prologix_ethernet('128.223.131.156')
+>>> plx = prologix.prologix_ethernet('128.223.xxx.xxx')
 
-for our ``plx`` controller object.
+for our ``plx`` controller object (replace the ``xxx``es
+with the controller's actual ip address, found using the
+Prologix Netfinder tool).
 
 """
 
@@ -154,11 +156,15 @@ class PrologixEthernet(_prologix_base):
 
     To instantiate, use the ``prologix_ethernet`` factory:
 
-    >>> plx = prologix.prologix_ethernet('128.223.131.156')
+    >>> plx = prologix.prologix_ethernet('128.223.xxx.xxx')
+
+    Replace the ``xxx``es with the controller's actual ip
+    address, found using the Prologix Netfinder tool.
+
 
     """
 
-    def __init__(self, ip='128.223.131.156'):
+    def __init__(self, ip):
         # open a socket to the controller
         self.bus = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP)
         self.bus.settimeout(5)
@@ -238,7 +244,7 @@ def prologix_ethernet(ip):
 
     To instantiate, specify the IP address of the controller:
 
-    >>> plx = prologix.prologix_ethernet('128.223.131.156')
+    >>> plx = prologix.prologix_ethernet('128.223.xxx.xxx')
 
     """
     if ip not in controllers:
