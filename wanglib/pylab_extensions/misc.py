@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from pylab import gca, draw
+from pylab import gca, sca, draw
 import numpy
 from time import sleep
 from wanglib.util import save
@@ -101,4 +101,54 @@ def apply_reference(line, ref):
     line.set_ydata(absorption)
     relim(line)
 
+# dual-tick functions
+
+def dualtick(func):
+    """
+    Decorator for dual-tick functions.
+
+    A dual-tick function is a function that, when called on
+    an axis, adds a second set of tick to it in different
+    units. This decorator creates such functions when
+    applied to the unit conversion function.
+
+    For example:
+
+    >>> @dualtick
+    >>> def eV(wl):
+    >>>     return 1240. / wl
+
+    Now, when working with plots of spectral data in units
+    of nm, calling
+
+    >>> eV()
+
+    will add a second axis along the top in units of eV. To
+    explicitly apply to some other axis ``ax``, use
+    ``eV(ax)``. Returns a reference to the twiny axis that
+    was made.
+
+    Another example, for a delay stage:
+
+    >>> @dualtick
+    >>> def ns(pos):
+    >>>     c = 300.  # mm / ns
+    >>>     zd = 521. # mm
+    >>>     return 2 * (zd - pos) / c
+
+    When plotting delay stage data enumerated in mm, this
+    function will add an axis in ps delay from the
+    zero-delay point at 521mm.
+
+    """
+    def decorator(ax=None):
+        ax1 = ax if ax else gca()
+        ax2 = ax1.twiny()
+        ax2.set_ylim(y for y in ax1.get_ylim())
+        ax2.set_xlim(func(x) for x in ax1.get_xlim())
+        if not ax:
+            sca(ax1)
+            draw()
+        return ax2
+    return decorator
 
