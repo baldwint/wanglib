@@ -40,6 +40,7 @@ use :class:`labview_client`.
 import socket as s
 import numpy as n
 from time import sleep
+from wanglib.util import InstrumentError
 
 class labview_client(object):
     """
@@ -47,10 +48,12 @@ class labview_client(object):
 
     Instantiate like so:
 
-    >>> ccd = labview_client(700)
+    >>> ccd = labview_client(700, '128.223.xxx.xxx')
 
-    where 700 is the current wavelength of the spectrometer
-    in nanometers (read from the window).
+    where ``121.223.xxx.xxx`` is the IP address of the
+    computer running the Labview server, and 700 is the
+    current wavelength of the spectrometer in nanometers
+    (read from the window).
 
     This info is needed because the labview program calculates
     wavelength values (from dispersion calibration info) on the
@@ -70,9 +73,24 @@ class labview_client(object):
 
     """
     def __init__(self, center_wl, host = None, port = 3663):
-        self.sock = s.socket(s.AF_INET,s.SOCK_STREAM)
-        self.sock.connect((host,port))
         self.center_wl = center_wl
+        self.remote_host = host
+        self.remote_port = port
+        self.connect()
+
+    def connect(self):
+        """
+        Establish a connection with the labview server.
+
+        If the labview program is ever stopped and restarted
+        (as it should be when not taking data, to avoid
+        wearing out the shutter), this should be called to
+        reestablish the connection.
+
+        """
+        self.sock = s.socket(s.AF_INET,s.SOCK_STREAM)
+        self.sock.connect((self.remote_host,
+                           self.remote_port))
 
     def get_spectrum(self):
         """
@@ -94,9 +112,12 @@ class labview_client(object):
         self.sock.send('Q')
         self.sock.send(str(100 * self.center_wl))
 
-#        sleep(1)
+        response = self.sock.recv(7)
+        if not response:
+            raise InstrumentError(
+                'No response from Labview client, try reconnecting')
 
-        datalen = int(self.sock.recv(7))
+        datalen = int(response)
         data = ''
 
         while datalen > 0:
