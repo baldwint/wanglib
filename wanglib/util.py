@@ -146,98 +146,103 @@ def sciround(number, sigfigs=1):
     exponent = floor(log10(number))
     return round(number, -int(exponent) + (sigfigs - 1))
 
-from scipy.optimize import leastsq
+try:
+    from scipy.optimize import leastsq
+except ImportError:
+    leastsq = None
+
 import csv
 
-class calibration(dict):
-    """
-    a class encapsulating a linear mapping based on measurements.
+if leastsq is not None:
+    class calibration(dict):
+        """
+        a class encapsulating a linear mapping based on measurements.
 
-    Stores calibration pairs, calculates fits to determine cal
-    parameters, and provides a function to do it.
+        Stores calibration pairs, calculates fits to determine cal
+        parameters, and provides a function to do it.
 
-    """
-    def __init__(self, *args, **kw):
-        # initial guess of the cal
-        self.param = [1,0]
-        # form of the fit function
-        self.func = lambda p, x: p[0] * x + p[1]
-        dict.__init__(self, *args, **kw)
+        """
+        def __init__(self, *args, **kw):
+            # initial guess of the cal
+            self.param = [1,0]
+            # form of the fit function
+            self.func = lambda p, x: p[0] * x + p[1]
+            dict.__init__(self, *args, **kw)
 
-    def keys(self):
-        return array(dict.keys(self))
+        def keys(self):
+            return array(dict.keys(self))
 
-    def values(self):
-        return array(dict.values(self))
+        def values(self):
+            return array(dict.values(self))
 
-    def recal(self):
-        """perform the fit routine and return parameters"""
-        diff = lambda p, x, y: y - self.func(p, x)
-        args = (self.keys(), self.values())
-        
-        result, win = leastsq(diff, self.param, args)
+        def recal(self):
+            """perform the fit routine and return parameters"""
+            diff = lambda p, x, y: y - self.func(p, x)
+            args = (self.keys(), self.values())
+            
+            result, win = leastsq(diff, self.param, args)
+            if win:
+                self.param = result
+            else:
+                print "fail!!"
+
+        def plot(self):
+            """ plot the calibration points and the fit"""
+            from pylab import plot
+            from numpy import linspace
+            plot(self.keys(), self.values(), 'o')
+            x = linspace(min(self.keys()), max(self.keys()), 100)
+            plot(self.keys(), self.values(), 'o')
+            plot(x, self.__call__(x), 'k--')
+
+
+        def __call__(self, arg):
+            """ calculate a conversion based on the current fit parameters """
+            return self.func(self.param, arg)
+
+        def save(self, filename):
+            """ 
+            save the current calibration data to csv file. pass filename as arg.
+
+            >>> cal.save('18oct.csv')
+
+            """
+            fl = open(filename, 'w')
+            wrt = csv.writer(fl)
+            for x, y in self.iteritems():
+                wrt.writerow([x, y])
+
+        def load(self, filename):
+            """
+            load a csv calibration.
+
+            >>> cal.load('18oct.csv')
+
+            """
+            rd = csv.reader(open(filename, 'r'))
+            for x, y in rd:
+                self[num(x)] = num(y)
+            self.recal()
+
+    def fit(x, y, func, guess):
+        """
+        fit data to a given functional form using least squares.
+
+        inputs:
+            x, y: data to fit, in arrays.
+            func: a function of p and x, where p is a parameter vector
+            guess: inital value of p to try.
+
+        outputs:
+            pfit: the best-fit parameter set.
+
+        """
+        diff = lambda p, x, y: y - func(p, x)
+        pfit, win = leastsq(diff, guess, (x, y))
         if win:
-            self.param = result
+            return pfit
         else:
-            print "fail!!"
-
-    def plot(self):
-        """ plot the calibration points and the fit"""
-        from pylab import plot
-        from numpy import linspace
-        plot(self.keys(), self.values(), 'o')
-        x = linspace(min(self.keys()), max(self.keys()), 100)
-        plot(self.keys(), self.values(), 'o')
-        plot(x, self.__call__(x), 'k--')
-
-
-    def __call__(self, arg):
-        """ calculate a conversion based on the current fit parameters """
-        return self.func(self.param, arg)
-
-    def save(self, filename):
-        """ 
-        save the current calibration data to csv file. pass filename as arg.
-
-        >>> cal.save('18oct.csv')
-
-        """
-        fl = open(filename, 'w')
-        wrt = csv.writer(fl)
-        for x, y in self.iteritems():
-            wrt.writerow([x, y])
-
-    def load(self, filename):
-        """
-        load a csv calibration.
-
-        >>> cal.load('18oct.csv')
-
-        """
-        rd = csv.reader(open(filename, 'r'))
-        for x, y in rd:
-            self[num(x)] = num(y)
-        self.recal()
-
-def fit(x, y, func, guess):
-    """
-    fit data to a given functional form using least squares.
-
-    inputs:
-        x, y: data to fit, in arrays.
-        func: a function of p and x, where p is a parameter vector
-        guess: inital value of p to try.
-
-    outputs:
-        pfit: the best-fit parameter set.
-
-    """
-    diff = lambda p, x, y: y - func(p, x)
-    pfit, win = leastsq(diff, guess, (x, y))
-    if win:
-        return pfit
-    else:
-        print "fail!"
+            print "fail!"
 
 def gaussian(p, x):
     """
