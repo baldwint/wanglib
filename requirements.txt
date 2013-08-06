@@ -1,6 +1,0 @@
-PIL==1.1.7
-gpib==1.0
-matplotlib==1.1.0
-numpy==1.6.2
-pyserial==2.3
-scipy==0.7.2
