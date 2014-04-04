@@ -44,14 +44,15 @@ This will print the data to STDOUT, but we could also:
 
 from pylab import plot, gca, draw
 
-def plotgen(gen, *args, **kwargs):
+def plotgen(gen, ax=None, **kwargs):
     """
     Take X,Y data from a generator, and plot it at the same time.
 
     :param gen: a generator object yielding X,Y pairs.
+    :param ax: an axes object (optional).
     :returns: an array of the measured Y values.
 
-    Any extra arguments are passed to the plot function.
+    Any extra keyword arguments are passed to the plot function.
 
     For example, we could plot progressively from our
     ``scan_wls`` example above:
@@ -69,13 +70,15 @@ def plotgen(gen, *args, **kwargs):
     >>> plot(wls, log(ref/trn), 'k--') # plot absorption spectrum
 
     """
+    if ax is None:
+        ax = gca()
 
     # maintain x and y lists (we'll append to these as we go)
     x = []
     y = []
 
     # make a (initially blank) line.
-    line, = plot(x, y, *args, **kwargs)
+    line, = ax.plot(x, y, **kwargs)
 
     for pt in gen: # for new y value generated
 
@@ -84,8 +87,8 @@ def plotgen(gen, *args, **kwargs):
 
         line.set_data(x, y)     # update plot with new data
         line._invalid = True    # this clears the cache or something
-        gca().relim()           # recalculate the limits
-        gca().autoscale_view()  # autoscale the bounds to include it all
+        ax.relim()           # recalculate the limits
+        ax.autoscale_view()  # autoscale the bounds to include it all
         draw()                  # force a redraw
     return line.get_ydata()
 
