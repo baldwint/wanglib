@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from matplotlib.pyplot import gca
+from pylab import gca
 
 def density_plot(two_dimensional, horiz, vert,
                  ax=None, **kwargs):
