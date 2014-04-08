@@ -147,7 +147,12 @@ def sciround(number, sigfigs=1):
     return round(number, -int(exponent) + (sigfigs - 1))
 
 try:
-    from scipy.optimize import leastsq
+    # importing scipy unnecessarily breaks Ctrl+C handling on windows, see:
+    # http://stackoverflow.com/questions/15457786/ctrl-c-crashes-python-after-importing-scipy-stats
+    # I am disabling this import because I never use `calibration` anymore,
+    # but having it here prevents plotgen from working properly
+    #from scipy.optimize import leastsq
+    leastsq = None
 except ImportError:
     leastsq = None
 
@@ -163,6 +168,7 @@ if leastsq is not None:
 
         """
         def __init__(self, *args, **kw):
+            from scipy.optimize import leastsq
             # initial guess of the cal
             self.param = [1,0]
             # form of the fit function
