@@ -85,11 +85,11 @@ def plotgen(gen, ax=None, **kwargs):
         x.append(pt[0])
         y.append(pt[1])
 
-        line.set_data(x, y)     # update plot with new data
-        line._invalid = True    # this clears the cache or something
-        ax.relim()           # recalculate the limits
-        ax.autoscale_view()  # autoscale the bounds to include it all
-        draw()                  # force a redraw
+        line.set_data(x, y)      # update plot with new data
+        line._invalid = True     # this clears the cache or something
+        ax.relim()               # recalculate the limits
+        ax.autoscale_view()      # autoscale the bounds to include it all
+        ax.figure.canvas.draw()  # force a redraw
     return line.get_ydata()
 
 if __name__ == '__main__':
