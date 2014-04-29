@@ -431,6 +431,28 @@ class saver(object):
         if self.verbose:
             print "saved as", fname
 
+from contextlib import contextmanager
+
+@contextmanager
+def notraceback():
+    """
+    Context manager to swallow keyboard interrupt.
+
+    Execute any infinitely-looping process in this context, like:
+
+    >>> from time import sleep
+    >>> with notraceback():
+    ...     while True:
+    ...         sleep(0.1)
+
+    If you are planning to interrupt it anyway then you are
+    not interested in the traceback and this prevents your
+    output from being cluttered.
+    """
+    try:
+        yield
+    except KeyboardInterrupt:
+        pass
 
 if __name__ == "__main__":
     from pylab import *
