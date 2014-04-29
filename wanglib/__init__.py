@@ -14,10 +14,10 @@ instrument control and data gathering easy.
 Obtaining and Installing
 ++++++++++++++++++++++++
 
-:mod:`wanglib` is hosted on Bitbucket_. Follow the instructions there on how
+:mod:`wanglib` is hosted on Github_. Follow the instructions there on how
 best to install the package and its dependencies.
 
-.. _Bitbucket: https://bitbucket.org/tkb/wanglib
+.. _Github: https://github.com/baldwint/wanglib
 
 """
 

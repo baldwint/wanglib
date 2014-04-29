@@ -32,9 +32,9 @@ these).
 .. _linux-gpib: http://linux-gpib.sourceforge.net/ 
 
 To install wanglib and keep it up to date, it is best to have the
-Mercurial_ DVCS and the pip_ installer.
+Git_ DVCS and the pip_ installer.
 
-.. _Mercurial: http://mercurial.selenic.com/
+.. _Git: http://http://git-scm.com/
 .. _pip: http://www.pip-installer.org/
 
 
@@ -44,7 +44,7 @@ Installation
 There are no versioned releases of ``wanglib`` - only a development
 version that changes all the time. Install this with ``pip``::
 
-    $ pip install --user -e hg+https://bitbucket.org/tkb/wanglib#egg=wanglib
+    $ pip install --user -e git+https://github.com/baldwint/wanglib.git#egg=wanglib
 
 The ``--user`` flag is a good idea to prevent version conflicts with other
 users on the same machine.
@@ -57,12 +57,11 @@ This creates an editable clone of the repository in your home directory at
 ``$HOME/src/wanglib``. To update to the latest version, change to this
 directory and do::
 
-    $ hg pull
-    $ hg update
+    $ git pull
 
 You can make changes to wanglib by editing the files in this folder.
 By making changes, you are creating a branch. If you wish to contribute
-your changes back to me, create a repo for your branch on Bitbucket, and
+your changes back to me, create a repo for your branch on Github, and
 open a pull request.
 
 Package Contents
