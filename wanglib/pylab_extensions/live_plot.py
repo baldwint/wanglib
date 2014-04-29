@@ -70,6 +70,10 @@ def plotgen(gen, ax=None, **kwargs):
     >>> plot(wls, log(ref/trn), 'k--') # plot absorption spectrum
 
     """
+    import matplotlib
+    if 'inline' in matplotlib.get_backend():
+        from IPython import display
+
     if ax is None:
         ax = gca()
 
@@ -89,7 +93,11 @@ def plotgen(gen, ax=None, **kwargs):
         line._invalid = True     # this clears the cache or something
         ax.relim()               # recalculate the limits
         ax.autoscale_view()      # autoscale the bounds to include it all
-        ax.figure.canvas.draw()  # force a redraw
+        if 'inline' in matplotlib.get_backend():
+            display.clear_output(wait=True)
+            display.display(ax.figure)
+        else:
+            ax.figure.canvas.draw()  # force a redraw
     return line.get_ydata()
 
 if __name__ == '__main__':
