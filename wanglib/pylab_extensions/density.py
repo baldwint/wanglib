@@ -1,11 +1,10 @@
-#!/usr/bin/env python
-
 from pylab import gca
+import matplotlib as mpl
 
 def density_plot(two_dimensional, horiz, vert,
                  ax=None, **kwargs):
     """
-    Display a 2D density plot - like imshow, but with 
+    Display a 2D density plot - like imshow, but with
     axes labels corresponding to the two axes provided.
 
     This will only be accurate for regularly-spaced
@@ -28,6 +27,12 @@ def density_plot(two_dimensional, horiz, vert,
     # marks with the lower left of pixels
     ext = [horiz[0], horiz[-1] + horiz_spacing,
            vert[0], vert[-1] + vert_spacing]
+    # ok, but if the origin is in the upper left (why is this the default)
+    # then things will be wrong. in this case, reverse the y-axis ticks
+    origin = kwargs.get('origin', mpl.rcParams['image.origin'])
+    assert origin in ('upper', 'lower')
+    if origin == 'upper':
+        ext[2:] = ext[2:][::-1]
     # this provides axes labels. Unfortunately it also changes
     # the aspect ratio, so we need to stretch it back.
     aspect = kwargs.pop('aspect', None)
@@ -36,10 +41,5 @@ def density_plot(two_dimensional, horiz, vert,
         aspect /=  float(len(horiz))/ len(vert)
         # the first step alone gets us back to a square image aspect.
         # the second will restore the native aspect ratio of the array.
-    # set alternate kwarg defaults
-    origin = kwargs.setdefault('origin', 'lower')
-    interpolation = kwargs.setdefault('interpolation', 'nearest')
     ax.imshow(two_dimensional, extent=ext, aspect = aspect,
               **kwargs)
-
-
