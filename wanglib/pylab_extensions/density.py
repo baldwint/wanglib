@@ -41,5 +41,4 @@ def density_plot(two_dimensional, horiz, vert,
         aspect /=  float(len(horiz))/ len(vert)
         # the first step alone gets us back to a square image aspect.
         # the second will restore the native aspect ratio of the array.
-    ax.imshow(two_dimensional, extent=ext, aspect = aspect,
-              **kwargs)
+    return ax.imshow(two_dimensional, extent=ext, aspect=aspect, **kwargs)
