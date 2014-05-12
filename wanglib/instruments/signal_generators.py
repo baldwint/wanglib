@@ -48,28 +48,26 @@ class ag8648(object):
         self.bus = bus
         #TODO: verify connection
 
-    @property
-    def on(self):
+    def get_on(self):
         """ is RF output on? """
         resp  = self.bus.ask("OUTP:STAT?")
         return bool(int(resp))
 
-    @on.setter
-    def on(self, val):
+    def set_on(self, val):
         if val:
             cmd = "ON"
         else:
             cmd = "OFF"
         self.bus.write("OUTP:STAT %s" % cmd)
 
-    @property
-    def amp(self):
+    on = property(get_on, set_on)
+
+    def get_amp(self):
         """ RF amplitude in dBm.  """
         resp  = self.bus.ask("POW:AMPL?")
         return float(resp)
 
-    @amp.setter
-    def amp(self, val, unit="DBM"):
+    def set_amp(self, val, unit="DBM"):
         """
         Set the output amplitude. Assumes units of DBM.
 
@@ -80,14 +78,14 @@ class ag8648(object):
         cmd = "POW:AMPL %.1f %s" % (val,unit)
         self.bus.write(cmd)
 
-    @property
-    def freq(self):
+    amp = property(get_amp, set_amp)
+
+    def get_freq(self):
         """ RF frequency in MHz.  """
         resp  = self.bus.ask("FREQ:CW?")
         return float(resp) / 10**6
 
-    @freq.setter
-    def freq(self, val, unit="MHZ"):
+    def set_freq(self, val, unit="MHZ"):
         """
         Set the RF frequency in MHz.
 
@@ -100,6 +98,8 @@ class ag8648(object):
         val = fmt_vals[unit] % val
         cmd = "FREQ:CW %s %s" % (val,unit)
         self.bus.write(cmd)
+
+    freq = property(get_freq, set_freq)
 
     def blink(self, interval = 1.):
         """
