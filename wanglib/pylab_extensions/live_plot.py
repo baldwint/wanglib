@@ -43,13 +43,15 @@ This will print the data to STDOUT, but we could also:
 """
 
 from pylab import plot, gca, draw
+from collections import deque
 
-def plotgen(gen, ax=None, **kwargs):
+def plotgen(gen, ax=None, maxlen=None, **kwargs):
     """
     Take X,Y data from a generator, and plot it at the same time.
 
     :param gen: a generator object yielding X,Y pairs.
     :param ax: an axes object (optional).
+    :param maxlen: maximum number of points to retain (optional).
     :returns: an array of the measured Y values.
 
     Any extra keyword arguments are passed to the plot function.
@@ -78,8 +80,8 @@ def plotgen(gen, ax=None, **kwargs):
         ax = gca()
 
     # maintain x and y lists (we'll append to these as we go)
-    x = []
-    y = []
+    x = deque([], maxlen)
+    y = deque([], maxlen)
 
     # make a (initially blank) line.
     line, = ax.plot(x, y, **kwargs)
