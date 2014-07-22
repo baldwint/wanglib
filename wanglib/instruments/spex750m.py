@@ -210,7 +210,7 @@ class spex750m(object):
         self.bus.readall()
         self.bus.write("HO\r")
         self.wait_for_ok()
-        resp = self.bus.readall()
+        resp = self.bus.readall(term_chars='\r')
         # convert to wavelength units
         wl = int(resp) / float(self._steps_per_nm)
         return wl

@@ -85,18 +85,21 @@ if serial:
             resp = super(Serial, self).read(size)
             self.logger.debug(' read: ' + show_newlines(resp))
             return resp
-        
-        def readall(self):
+
+        def readall(self, term_chars=None):
             """
             Automatically read all the bytes from the serial port.
 
             if :attr:`term_chars` is set, this will continue
             to read until the terminating bytes are received.
+            This can be provided as a keyword argument.
 
             """
             resp = self.read(self.inWaiting())
-            if self.term_chars is not '':
-                while resp[-len(self.term_chars):] != self.term_chars:
+            if term_chars is None:
+                term_chars = self.term_chars
+            if term_chars is not '':
+                while resp[-len(term_chars):] != term_chars:
                     resp += self.read(self.inWaiting())
             return resp
 
