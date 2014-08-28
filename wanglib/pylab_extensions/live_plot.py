@@ -79,19 +79,26 @@ def plotgen(gen, ax=None, maxlen=None, **kwargs):
     if ax is None:
         ax = gca()
 
-    # maintain x and y lists (we'll append to these as we go)
-    x = deque([], maxlen)
-    y = deque([], maxlen)
+    # obtain first value
+    points = next(gen)
 
-    # make a (initially blank) line.
-    line, = ax.plot(x, y, **kwargs)
+    # maintain x_n and y_n lists (we'll append to these as we go)
+    deques = [deque([point], maxlen) for point in points]
 
-    for pt in gen: # for new y value generated
+    # make some (initially length-1) lines.
+    lines = ax.plot(*deques)
+    assert len(lines) == len(deques) / 2
 
-        x.append(pt[0])
-        y.append(pt[1])
+    for points in gen: # for new x_n,y_n tuple generated
 
-        line.set_data(x, y)      # update plot with new data
+        #append to the deques
+        for pt,deq in zip(points, deques):
+            deq.append(pt)
+
+        # update plot with new data
+        for line,xdata,ydata in zip(lines, deques[::2], deques[1::2]):
+            line.set_data(xdata, ydata)
+
         line._invalid = True     # this clears the cache or something
         ax.relim()               # recalculate the limits
         ax.autoscale_view()      # autoscale the bounds to include it all
@@ -109,7 +116,7 @@ if __name__ == '__main__':
 
     from time import sleep
     from pylab import *
- 
+
     def silly_gen(x):
         """
         a silly generator function producing 'data'
@@ -118,13 +125,12 @@ if __name__ == '__main__':
         """
         for pt in x:
             sleep(0.1)
-            rl = sin(2 * pi * pt) + 6
-            rl += 0.1* randn()
-            yield pt, rl
+            rl = sin(2 * pi * pt) + 6 + 0.1* randn()
+            r2 = cos(2 * pi * pt) + 6 + 0.1* randn()
+            yield pt, rl, pt, r2
 
     ion()
 
     x = arange(0,4,0.1)
     y = plotgen(silly_gen(x))
 
- 
