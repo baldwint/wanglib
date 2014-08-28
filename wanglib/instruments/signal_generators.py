@@ -62,6 +62,20 @@ class ag8648(object):
 
     on = property(get_on, set_on)
 
+    def get_pulse(self):
+        """ is pulse modulation enabled? """
+        resp  = self.bus.ask("PULM:STAT?")
+        return bool(int(resp))
+
+    def set_pulse(self, val):
+        if val:
+            cmd = "ON"
+        else:
+            cmd = "OFF"
+        self.bus.write("PULM:STAT %s" % cmd)
+
+    pulse = property(get_pulse, set_pulse)
+
     def get_amp(self):
         """ RF amplitude in dBm.  """
         resp  = self.bus.ask("POW:AMPL?")
