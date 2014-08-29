@@ -44,6 +44,7 @@ This will print the data to STDOUT, but we could also:
 
 from pylab import plot, gca, draw
 from collections import deque
+import itertools
 
 def plotgen(gen, ax=None, maxlen=None, **kwargs):
     """
@@ -122,6 +123,9 @@ def plotgen(gen, ax=None, maxlen=None, **kwargs):
             display.display(ax[0].figure)
         else:
             ax[0].figure.canvas.draw()  # force a redraw
+
+    result = [line.get_data() for line in lines]
+    return list(itertools.chain(*result))
 
 if __name__ == '__main__':
 
