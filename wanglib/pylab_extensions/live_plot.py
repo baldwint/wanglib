@@ -82,32 +82,46 @@ def plotgen(gen, ax=None, maxlen=None, **kwargs):
     # obtain first value
     points = next(gen)
 
+    try:
+        len(ax) # if a tuple of axes was provided, do nothing
+    except TypeError:
+        # if not, plot all lines to the same axes
+        ax = (ax,) * (len(points) / 2)
+
+    assert len(ax) == len(points) / 2
+
     # maintain x_n and y_n lists (we'll append to these as we go)
     deques = [deque([point], maxlen) for point in points]
 
     # make some (initially length-1) lines.
-    lines = ax.plot(*deques)
+    lines = []
+    for axis, x, y in zip(ax, deques[::2], deques[1::2]):
+        line, = axis.plot(x, y, **kwargs)
+        lines.append(line)
     assert len(lines) == len(deques) / 2
 
     for points in gen: # for new x_n,y_n tuple generated
 
-        #append to the deques
+        # append to the deques
         for pt,deq in zip(points, deques):
             deq.append(pt)
 
-        # update plot with new data
+        # update the lines
         for line,xdata,ydata in zip(lines, deques[::2], deques[1::2]):
-            line.set_data(xdata, ydata)
+            line.set_data(xdata, ydata)  # update plot with new data
+            line._invalid = True         # this clears the cache?
 
-        line._invalid = True     # this clears the cache or something
-        ax.relim()               # recalculate the limits
-        ax.autoscale_view()      # autoscale the bounds to include it all
+        # rescale the axes
+        for axis in ax:
+            axis.relim()           # recalculate the limits
+            axis.autoscale_view()  # autoscale the bounds to include it all
+
+        # redraw the figure
         if 'inline' in matplotlib.get_backend():
             display.clear_output(wait=True)
-            display.display(ax.figure)
+            display.display(ax[0].figure)
         else:
-            ax.figure.canvas.draw()  # force a redraw
-    return line.get_ydata()
+            ax[0].figure.canvas.draw()  # force a redraw
 
 if __name__ == '__main__':
 
@@ -131,6 +145,9 @@ if __name__ == '__main__':
 
     ion()
 
+    a1 = subplot(211)
+    a2 = subplot(212)
+
     x = arange(0,4,0.1)
-    y = plotgen(silly_gen(x))
+    y = plotgen(silly_gen(x), ax=(a1,a2))
 
