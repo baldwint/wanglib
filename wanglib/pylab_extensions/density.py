@@ -1,5 +1,6 @@
 from pylab import gca
 import matplotlib as mpl
+from numpy import asarray
 
 def density_plot(two_dimensional, horiz, vert,
                  ax=None, **kwargs):
@@ -20,6 +21,8 @@ def density_plot(two_dimensional, horiz, vert,
     """
     if ax is None:
         ax = gca()
+    two_dimensional = asarray(two_dimensional)
+    horiz, vert = asarray(horiz), asarray(vert)
     assert two_dimensional.shape == vert.shape + horiz.shape
     horiz_spacing = (horiz[-1] - horiz[0]) / (len(horiz) - 1.)
     vert_spacing = (vert[-1] - vert[0]) / (len(vert) - 1.)
