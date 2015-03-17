@@ -3,43 +3,6 @@
 """
 This module facilitates plotting of data while it is being gathered.
 
-To use this, you will need to implement your data gathering
-using Python generators_. A generator is like a Python function
-that, rather than returning data all at once (with the
-``return`` statement), returns it point by point (with the
-``yield`` statement).
-
-.. _generators: http://wiki.python.org/moin/Generators
-
-Suppose we have a ``spex`` spectrometer object, and a
-``lockin`` object that we are using to detect the signal at
-the output slit of the spectrometer. Here is an example of a
-generator we might use to scan a spectrum, while yielding
-values along the way:
-
->>> def scan_wls(wls):
-...     for wl in wls:
-...         spex.set_wl(wl)
-...         sleep(0.1)
-...         val = lockin.get_x()
-...         yield wl, val
-
-.. note :: This pattern is so common that a shorthand is provided for it in :func:`wanglib.util.scanner`.
-
-Then, if we wanted to scan from 800nm to 810nm, we would do
-
->>> scan = scan_wls(numpy.arange(800, 810, 0.1))
->>> for x,y in scan:
-...     print x,y
-
-This will print the data to STDOUT, but we could also:
-
- - save it to a python list using `list comprehensions`_
- - save it as a numpy object using :func:`numpy.fromiter`
- - plot it progressively using :func:`wanglib.pylab_extensions.live_plot.plotgen`
-
-.. _`list comprehensions`: http://docs.python.org/tutorial/datastructures.html#list-comprehensions
-
 """
 
 from pylab import plot, gca, draw
@@ -53,24 +16,25 @@ def plotgen(gen, ax=None, maxlen=None, **kwargs):
     :param gen: a generator object yielding X,Y pairs.
     :param ax: an axes object (optional).
     :param maxlen: maximum number of points to retain (optional).
-    :returns: an array of the measured Y values.
+    :returns: an array of the measured X and Y values.
 
     Any extra keyword arguments are passed to the plot function.
 
-    For example, we could plot progressively from our
-    ``scan_wls`` example above:
+    ``gen`` can yield any even number of values, and these are
+    interpreted as a set of X,Y pairs. That is, if the provided
+    generator yields 4 values each time, plotgen will plot two lines -
+    with the first line updated from the [0:2] slice and the second
+    line updated from the [2:4] slice.
 
-    >>> wls = arange(800, 810, 0.1))
-    >>> plotgen(scan_wls(wls))
-    # ... measures data, plotting as it goes along ...
+    ``ax`` is the axes object into which the line(s) are plotted. By
+    default, the current axes. ``ax`` can also be a tuple of axes
+    objects, as long as the tuple is the same length as the number of
+    lines being plotted. Each line is then plotted into the
+    corresponding axes.
 
-    After `scan_wls` yields its last value, it will return the
-    complete array of measured Y values. So you can use it
-    like this:
-
-    >>> ref = plotgen(scan_wls(wls))   # measure reference spectrum and plot it
-    >>> trn = plotgen(scan_wls(wls))   # measure transmission spectrum and plot it
-    >>> plot(wls, log(ref/trn), 'k--') # plot absorption spectrum
+    ``maxlen``, when provided, limits the buffer size. When the
+    plotted lines each grow to this number of points, the oldest data
+    points will start being trimmed off the line's trailing end.
 
     """
     import matplotlib
