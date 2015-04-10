@@ -44,6 +44,7 @@ class srs830(object):
 
     ADC_cmd = "OAUX?%d"
     ADC_range = (1, 2, 3, 4)
+    DAC_range = (1, 2, 3, 4)
 
     measurements = {
         'X': 1,
@@ -83,6 +84,24 @@ class srs830(object):
             raise InstrumentError(err)
         response = self.bus.ask(self.ADC_cmd % n)
         return float(response)
+
+    def get_DAC(self, n):
+        """ read one of the DAC ports. Return value in volts."""
+        if n not in self.DAC_range:
+            err = "Indicate DAC in range %s" % (self.DAC_range)
+            raise InstrumentError(err)
+        response = self.bus.ask("AUXV?%d" % n)
+        return float(response)
+
+    def set_DAC(self, n, value):
+        """ set one of the DAC ports. Provide value in volts."""
+        if n not in self.DAC_range:
+            err = "Indicate DAC in range %s" % (self.DAC_range)
+            raise InstrumentError(err)
+        if abs(value) > 10.5:
+            err = "DAC range is [-10.5V, 10.5V]"
+            raise InstrumentError(err)
+        response = self.bus.write("AUXV %d, %.3f" % (n, value))
 
 
 class egg5110(object):
