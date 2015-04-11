@@ -25,9 +25,22 @@ class burleigh(object):
 
     def __init__(self, port = '/dev/ttyUSB0'):
         self.bus = Serial(port)
+        self.query() # this switches it to query mode
+        self.purge()
 
     def __del__(self):
         self.bus.close()
+
+    def query(self):
+        """
+        Request a single response string.
+
+        The first time the wavemeter receives this command,
+        it will switch from broadcast to query mode.
+        """
+        self.bus.write('@\x51\r\n')
+        response = self.bus.read(23)
+        return response
 
     def purge(self):
         """ purge the buffer of old measurements"""
@@ -44,45 +57,23 @@ class burleigh(object):
             val = None
         return val, int(display, 16), int(system, 16)
 
-    def data_stream(self):
-        start = time()
-        self.purge() # purge the buffer
-        while True:
-            response = self.bus.readline().rstrip()
-            sys.stdout.write('\r' + response)
-            sys.stdout.flush()
-            wl, ds, ss = self.parse(response)
-            yield time() - start, wl
-
     def get_wl(self):
         """ Get the current wavelength (or frequency) """
-        self.purge() # purge the buffer
-        response = self.bus.readline().rstrip()
+        response = self.query()
         wl, ds, ss = self.parse(response)
         return wl
     wl = property(get_wl)
     """ Current wavelength (or frequency) """
 
     def get_unit(self):
-        self.purge() # purge the buffer
-        response = self.bus.readline().rstrip()
+        response = self.query()
         wl, ds, ss = self.parse(response)
         return self.parse_code(ds, self.unit_masks)
     unit = property(get_unit)
 
     def get_display(self):
-        self.purge() # purge the buffer
-        response = self.bus.readline().rstrip()
+        response = self.query()
         wl, ds, ss = self.parse(response)
         return self.parse_code(ds, self.display_masks)
     display = property(get_display)
 
-if __name__ == '__main__':
-    from pylab import *
-    from wanglib.pylab_extensions import plotgen
-    ion()
-    wm = burleigh()
-    try:
-        plotgen(wm.data_stream)
-    except KeyboardInterrupt:
-        show()
