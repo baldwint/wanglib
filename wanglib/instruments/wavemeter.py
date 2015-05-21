@@ -51,29 +51,40 @@ class burleigh(object):
         """ parse the wavemeter's broadcast string """
         # this is documented on page 30 of the manual
         meas, display, system = response.split(',')
-        try:
-            val = float(meas)
-        except ValueError:
+        if 'LO SIG' in meas:
+            approx = True
             val = None
-        return val, int(display, 16), int(system, 16)
+        elif meas[0] == '~':
+            approx = True
+            val = float(meas[1:])
+        elif meas[0] == '+':
+            approx = False
+            val = float(meas)
+        elif meas[0] == '-':
+            approx = False
+            val = float(meas)
+        else:
+            raise ValueError('unknown response ' + meas)
+        return approx, val, int(display, 16), int(system, 16)
+
+    def get_response(self):
+        response = self.query()
+        return self.parse(response)
 
     def get_wl(self):
         """ Get the current wavelength (or frequency) """
-        response = self.query()
-        wl, ds, ss = self.parse(response)
+        ax, wl, ds, ss = self.get_response()
         return wl
     wl = property(get_wl)
     """ Current wavelength (or frequency) """
 
     def get_unit(self):
-        response = self.query()
-        wl, ds, ss = self.parse(response)
+        ax, wl, ds, ss = self.get_response()
         return self.parse_code(ds, self.unit_masks)
     unit = property(get_unit)
 
     def get_display(self):
-        response = self.query()
-        wl, ds, ss = self.parse(response)
+        ax, wl, ds, ss = self.get_response()
         return self.parse_code(ds, self.display_masks)
     display = property(get_display)
 
