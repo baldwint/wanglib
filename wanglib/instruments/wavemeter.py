@@ -71,9 +71,14 @@ class burleigh(object):
         response = self.query()
         return self.parse(response)
 
-    def get_wl(self):
-        """ Get the current wavelength (or frequency) """
+    def get_wl(self, strict=True):
+        """ Get the current wavelength (or frequency).
+
+        If strict, cast approximate measurements to None. 
+        """
         ax, wl, ds, ss = self.get_response()
+        if (ax is True) and (strict is True):
+            wl = None
         return wl
     wl = property(get_wl)
     """ Current wavelength (or frequency) """
