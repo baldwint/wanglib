@@ -8,7 +8,7 @@ Interfaces to New Focus diode laser controllers.
 from wanglib.util import InstrumentError, show_newlines
 
 class velocity6300(object):
-    """
+    r"""
     A New Focus Velocity 6300 diode laser controller.
 
     To instantiate, pass an instrument object to the constructor.
@@ -20,11 +20,11 @@ class velocity6300(object):
     where ``plx`` is the prologix object. If you're using prologix,
     it's very important to turn off read-after-write!
 
-    To use with RS232, use ``\\r`` as the termination
+    To use with RS232, use ``\r`` as the termination
     character. For example:
 
     >>> from wanglib.util import Serial
-    >>> laser = velocity6300(Serial('/dev/ttyUSB0', baudrate=19200, term_chars='\\r'))
+    >>> laser = velocity6300(Serial('/dev/ttyUSB0', baudrate=19200, term_chars='\r'))
 
     """
 

@@ -140,7 +140,7 @@ class ESP300_stage(_newport_stage):
     To use over RS232, use the following parameters:
         :baudrate: 19200
         :rtscts:   True
-        :term_chars: '\\r\\n'
+        :term_chars: ``\r\n``
 
     These settings are used by default if you simply pass
     the name of the serial port as a string:
